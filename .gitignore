@@ -1,0 +1,17 @@
+node_modules
+dist
+.next
+.env
+.env.*
+*.env
+*.env.*
+**/.env
+**/.env.*
+!.env.example
+!*.env.example
+!**/.env.example
+apps/api/uploads/*
+!apps/api/uploads/.gitkeep
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
