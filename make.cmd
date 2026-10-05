@@ -22,11 +22,11 @@ echo Comandos disponibles: dev, up, down, test, build, smoke, logs, backup, rest
 exit /b 0
 
 :dev
-"C:\Program Files\Git\bin\bash.exe" scripts/dev.sh
+powershell -ExecutionPolicy Bypass -File scripts\dev.ps1
 exit /b %ERRORLEVEL%
 
 :up
-"C:\Program Files\Git\bin\bash.exe" scripts/up.sh
+powershell -ExecutionPolicy Bypass -File scripts\up.ps1
 exit /b %ERRORLEVEL%
 
 :down
@@ -42,15 +42,15 @@ npm run build
 exit /b %ERRORLEVEL%
 
 :smoke
-"C:\Program Files\Git\bin\bash.exe" scripts/smoke.sh %2
+powershell -ExecutionPolicy Bypass -File scripts\smoke.ps1 %2
 exit /b %ERRORLEVEL%
 
 :logs
-"C:\Program Files\Git\bin\bash.exe" scripts/logs.sh %2
+powershell -ExecutionPolicy Bypass -File scripts\logs.ps1 %2
 exit /b %ERRORLEVEL%
 
 :backup
-"C:\Program Files\Git\bin\bash.exe" scripts/backup.sh
+powershell -ExecutionPolicy Bypass -File scripts\backup.ps1
 exit /b %ERRORLEVEL%
 
 :restore
@@ -58,9 +58,19 @@ exit /b %ERRORLEVEL%
 exit /b %ERRORLEVEL%
 
 :deploy
-"C:\Program Files\Git\bin\bash.exe" scripts/deploy.sh
+where bash >nul 2>nul
+if %ERRORLEVEL%==0 (
+    bash scripts/deploy.sh %2
+) else (
+    "C:\Program Files\Git\bin\bash.exe" scripts/deploy.sh %2
+)
 exit /b %ERRORLEVEL%
 
 :rollback
-"C:\Program Files\Git\bin\bash.exe" scripts/rollback.sh %2
+where bash >nul 2>nul
+if %ERRORLEVEL%==0 (
+    bash scripts/rollback.sh %2
+) else (
+    "C:\Program Files\Git\bin\bash.exe" scripts/rollback.sh %2
+)
 exit /b %ERRORLEVEL%
