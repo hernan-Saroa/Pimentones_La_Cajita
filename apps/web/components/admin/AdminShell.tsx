@@ -53,70 +53,134 @@ export function AdminShell({ children }: { children: ReactNode }) {
     );
   }
 
-  const nav: { href: string; label: string; icon: string }[] = [
-    { href: '/admin', label: 'Tablero', icon: '📊' },
-    { href: '/admin/pedidos', label: 'Pedidos', icon: '📦' },
-    { href: '/admin/clientes', label: 'Clientes', icon: '👥' },
-    { href: '/admin/productos', label: 'Productos', icon: '🌶️' },
-    { href: '/admin/inventario', label: 'Inventario', icon: '📋' },
-    { href: '/admin/cupones', label: 'Cupones', icon: '🎟️' },
-    { href: '/admin/envios', label: 'Envíos', icon: '🚚' },
-    { href: '/admin/mensajes', label: 'Mensajes', icon: '💬' },
-    { href: '/admin/contenido', label: 'Contenido', icon: '📝' },
-    { href: '/admin/ajustes', label: 'Ajustes', icon: '⚙️' },
-    { href: '/admin/usuarios', label: 'Usuarios', icon: '🛡️' },
+  const navSections = [
+    {
+      group: 'GENERAL',
+      items: [
+        { href: '/admin', label: 'Tablero', icon: '📊' },
+      ],
+    },
+    {
+      group: 'VENTAS & CLIENTES',
+      items: [
+        { href: '/admin/pedidos', label: 'Pedidos', icon: '📦' },
+        { href: '/admin/clientes', label: 'Clientes', icon: '👥' },
+      ],
+    },
+    {
+      group: 'CATÁLOGO & STOCK',
+      items: [
+        { href: '/admin/productos', label: 'Productos', icon: '🌶️' },
+        { href: '/admin/inventario', label: 'Inventario', icon: '📋' },
+        { href: '/admin/cupones', label: 'Cupones', icon: '🎟️' },
+      ],
+    },
+    {
+      group: 'LOGÍSTICA & MENSAJES',
+      items: [
+        { href: '/admin/envios', label: 'Envíos', icon: '🚚' },
+        { href: '/admin/mensajes', label: 'Mensajes', icon: '💬' },
+      ],
+    },
+    {
+      group: 'CONFIGURACIÓN',
+      items: [
+        { href: '/admin/contenido', label: 'Contenido', icon: '📝' },
+        { href: '/admin/ajustes', label: 'Ajustes', icon: '⚙️' },
+        { href: '/admin/usuarios', label: 'Usuarios', icon: '🛡️' },
+      ],
+    },
   ];
 
   return (
     <Ctx.Provider value={api}>
       <MeCtx.Provider value={me}>
-        <div className="admin-root">
-          <header className="admin-navbar">
-            <div className="admin-nav-inner">
-              <div className="admin-brand">
-                <Link href="/admin" className="admin-brand-link">
-                  <img src="/img/logo.svg" alt="Pimentones La Cajita" className="admin-nav-logo-img" />
-                  <span className="admin-brand-pill">Backoffice</span>
-                </Link>
+        <div className="admin-app-layout">
+          {/* BARRA LATERAL (SIDEBAR) */}
+          <aside className="admin-sidebar">
+            <div className="admin-sidebar-header">
+              <Link href="/admin" className="admin-sidebar-brand" title="Ir al Tablero principal">
+                <img src="/img/logo-vertical.svg" alt="Pimentones La Cajita" className="admin-sidebar-logo" />
+              </Link>
+              <div className="admin-sidebar-badge">
+                <span className="sidebar-live-dot" />
+                <span>CONSOLA OPERATIVA</span>
               </div>
+            </div>
 
-              <nav className="admin-menu">
-                {nav.map((item) => {
-                  const isActive = pathname === item.href;
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`admin-nav-tab ${isActive ? 'is-active' : ''}`}
-                    >
-                      <span className="admin-tab-icon">{item.icon}</span>
-                      <span>{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </nav>
-
-              <div className="admin-user-bar">
-                <div className="admin-user-chip">
-                  <span className="admin-user-dot" />
-                  <span className="admin-user-name">{me?.name || 'Administrador'}</span>
-                  <span className="admin-role-badge">{me?.role || 'owner'}</span>
+            <nav className="admin-sidebar-nav">
+              {navSections.map((sec) => (
+                <div key={sec.group} className="sidebar-nav-group">
+                  <span className="sidebar-group-title">{sec.group}</span>
+                  <div className="sidebar-group-items">
+                    {sec.items.map((item) => {
+                      const isActive = pathname === item.href;
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className={`sidebar-nav-item ${isActive ? 'is-active' : ''}`}
+                        >
+                          <span className="sidebar-item-icon">{item.icon}</span>
+                          <span className="sidebar-item-label">{item.label}</span>
+                          {isActive && <span className="sidebar-item-active-pip" />}
+                        </Link>
+                      );
+                    })}
+                  </div>
                 </div>
-                <Link href="/" target="_blank" className="admin-store-link" title="Abrir tienda en nueva pestaña">
-                  Ver tienda ↗
+              ))}
+            </nav>
+
+            <div className="admin-sidebar-footer">
+              <div className="sidebar-user-card">
+                <div className="sidebar-user-avatar">
+                  {me?.name ? me.name.charAt(0).toUpperCase() : 'A'}
+                </div>
+                <div className="sidebar-user-info">
+                  <strong className="sidebar-user-name">{me?.name || 'Administrador'}</strong>
+                  <span className="sidebar-user-role">{me?.role || 'owner'}</span>
+                </div>
+              </div>
+              <div className="sidebar-actions-row">
+                <Link href="/" target="_blank" className="sidebar-store-btn" title="Abrir tienda pública en nueva pestaña">
+                  <span>Tienda ↗</span>
                 </Link>
-                <button className="admin-logout-btn" onClick={logout} title="Cerrar sesión">
-                  Salir
+                <button className="sidebar-logout-btn" onClick={logout} title="Cerrar sesión">
+                  <span>Salir</span>
                 </button>
               </div>
             </div>
-          </header>
+          </aside>
 
-          <main className="admin-viewport">
-            <div className="admin-container">
-              {children}
-            </div>
-          </main>
+          {/* CONTENEDOR PRINCIPAL LUMINOSO (WHITE DOMINANT) */}
+          <div className="admin-main-wrapper">
+            <header className="admin-topbar">
+              <div className="topbar-left">
+                <span className="topbar-breadcrumb">Consola Administrativa</span>
+                <span className="topbar-sep">/</span>
+                <span className="topbar-current">
+                  {navSections.flatMap((s) => s.items).find((i) => i.href === pathname)?.label || 'Tablero'}
+                </span>
+              </div>
+
+              <div className="topbar-right">
+                <div className="topbar-status-pill">
+                  <span className="status-dot-green" />
+                  <span>Base de datos activa</span>
+                </div>
+                <Link href="/" target="_blank" className="topbar-view-store">
+                  Ver tienda pública ↗
+                </Link>
+              </div>
+            </header>
+
+            <main className="admin-main-content">
+              <div className="admin-content-canvas">
+                {children}
+              </div>
+            </main>
+          </div>
         </div>
       </MeCtx.Provider>
     </Ctx.Provider>
