@@ -75,11 +75,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
             <div className="admin-nav-inner">
               <div className="admin-brand">
                 <Link href="/admin" className="admin-brand-link">
-                  <span className="admin-brand-badge">🌶️</span>
-                  <div className="admin-brand-text">
-                    <span className="admin-brand-name">La Cajita</span>
-                    <span className="admin-brand-tag">Backoffice</span>
-                  </div>
+                  <img src="/img/logo.svg" alt="Pimentones La Cajita" className="admin-nav-logo-img" />
+                  <span className="admin-brand-pill">Backoffice</span>
                 </Link>
               </div>
 
@@ -152,35 +149,92 @@ function Login({ onToken }: { onToken: (t: string, u: { id: number; email: strin
   };
 
   return (
-    <div className="admin-auth-screen">
-      <div className="admin-auth-ambient-glow" />
-      <div className="admin-auth-noise" />
+    <div className="admin-split-auth">
+      {/* PANEL IZQUIERDO: SHOWCASE EDITORIAL & EXPERIENCIA DE MARCA */}
+      <aside className="admin-showcase-pane">
+        <div className="admin-showcase-bg-layer" />
+        <div className="admin-showcase-overlay" />
 
-      <div className="admin-auth-container">
-        <div className="admin-auth-card">
-          <div className="admin-auth-header">
-            <div className="admin-auth-pill">
-              <span className="auth-pulse-dot" />
-              <span>SISTEMA DE GESTIÓN SEGURO</span>
+        <div className="admin-showcase-content">
+          <header className="admin-showcase-top">
+            <div className="admin-status-badge">
+              <span className="status-radar-dot" />
+              <span>SISTEMA EN LÍNEA · POSTGRESQL 16</span>
             </div>
+            <span className="admin-origin-tag">Bogotá D.C., Colombia</span>
+          </header>
 
-            <div className="admin-auth-logo-frame">
-              <span className="auth-logo-emoji">🌶️</span>
-            </div>
-
-            <h1 className="admin-auth-title">Pimentones La Cajita</h1>
-            <p className="admin-auth-subtitle">
-              Consola de Administración, Pedidos & Operaciones
+          <div className="admin-showcase-hero">
+            <span className="admin-artisan-tag">CONSERVAS ARTESANALES DE AUTOR</span>
+            <h2 className="admin-showcase-headline">
+              El arte del pimentón confitado llevado al más alto estándar digital.
+            </h2>
+            <p className="admin-showcase-desc">
+              Control integral de producción, trazabilidad frasco a frasco, gestión de pedidos nacionales y analítica de ventas en tiempo real.
             </p>
+
+            <div className="admin-showcase-features">
+              <div className="showcase-feat-item">
+                <span className="feat-icon">🌶️</span>
+                <div>
+                  <strong>Receta Artesanal Protegida</strong>
+                  <span>Cocción lenta sin conservantes artificiales</span>
+                </div>
+              </div>
+              <div className="showcase-feat-item">
+                <span className="feat-icon">⚡</span>
+                <div>
+                  <strong>Inventario Transaccional ACID</strong>
+                  <span>Descuento atómico de stock por pedido confirmado</span>
+                </div>
+              </div>
+              <div className="showcase-feat-item">
+                <span className="feat-icon">🛡️</span>
+                <div>
+                  <strong>Cifrado y Seguridad</strong>
+                  <span>Autenticación JWT con roles y sesiones cifradas</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="admin-auth-form">
-            <div className="admin-form-group">
-              <label htmlFor="auth-email" className="admin-form-label">
-                <span>CORREO ELECTRÓNICO</span>
+          <footer className="admin-showcase-footer">
+            <p className="artisan-quote">
+              “El secreto está en la paciencia del fuego lento y la selección rigurosa de cada pimentón.”
+            </p>
+            <span className="quote-author">— Taller Artesanal La Cajita</span>
+          </footer>
+        </div>
+      </aside>
+
+      {/* PANEL DERECHO: FORMULARIO ULTRA LIMPIO, ELEGANTE Y RESPONSIVO */}
+      <section className="admin-form-pane">
+        <div className="admin-form-card">
+          <header className="admin-form-header">
+            <div className="admin-logo-wrapper">
+              <img
+                src="/img/logo-vertical.svg"
+                alt="Pimentones La Cajita"
+                className="admin-official-brand-logo"
+              />
+            </div>
+            <div className="admin-access-badge">CONSOLA ADMINISTRATIVA</div>
+            <h1 className="admin-form-title">Iniciar sesión</h1>
+            <p className="admin-form-subtitle">
+              Ingresa con tus credenciales maestras para acceder a la gestión de la plataforma.
+            </p>
+          </header>
+
+          <form onSubmit={handleSubmit} className="admin-login-form">
+            <div className="admin-field-group">
+              <label htmlFor="auth-email" className="admin-field-label">
+                CORREO ELECTRÓNICO
               </label>
-              <div className="admin-input-wrapper">
-                <span className="admin-input-icon">✉️</span>
+              <div className="admin-field-input-box">
+                <svg className="field-svg-icon" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                </svg>
                 <input
                   id="auth-email"
                   type="email"
@@ -189,26 +243,29 @@ function Login({ onToken }: { onToken: (t: string, u: { id: number; email: strin
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="username"
-                  className="admin-input"
+                  className="admin-text-input"
                 />
               </div>
             </div>
 
-            <div className="admin-form-group">
-              <div className="admin-label-row">
-                <label htmlFor="auth-password" className="admin-form-label">
-                  <span>CONTRASEÑA</span>
+            <div className="admin-field-group">
+              <div className="admin-field-label-split">
+                <label htmlFor="auth-password" className="admin-field-label">
+                  CONTRASEÑA
                 </label>
                 <button
                   type="button"
-                  className="admin-toggle-pwd"
+                  className="admin-toggle-pwd-btn"
                   onClick={() => setShowPassword(!showPassword)}
+                  aria-label="Ver u ocultar contraseña"
                 >
-                  {showPassword ? 'Ocultar' : 'Ver'}
+                  {showPassword ? 'Ocultar' : 'Mostrar'}
                 </button>
               </div>
-              <div className="admin-input-wrapper">
-                <span className="admin-input-icon">🔒</span>
+              <div className="admin-field-input-box">
+                <svg className="field-svg-icon" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                </svg>
                 <input
                   id="auth-password"
                   type={showPassword ? 'text' : 'password'}
@@ -217,29 +274,31 @@ function Login({ onToken }: { onToken: (t: string, u: { id: number; email: strin
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
-                  className="admin-input"
+                  className="admin-text-input"
                 />
               </div>
             </div>
 
             {error && (
-              <div className="admin-auth-alert" role="alert">
-                <span className="alert-icon">⚠️</span>
+              <div className="admin-alert-box" role="alert">
+                <svg className="alert-svg-icon" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
                 <span>{error}</span>
               </div>
             )}
 
             <button
               type="submit"
-              className="admin-auth-submit-btn"
+              className="admin-primary-btn"
               disabled={busy}
             >
               {busy ? (
-                <span className="btn-loading-state">
-                  <span className="auth-spinner" /> Validando acceso…
+                <span className="btn-spinner-state">
+                  <span className="admin-button-spinner" /> Validando acceso…
                 </span>
               ) : (
-                <span className="btn-idle-state">
+                <span className="btn-ready-state">
                   Ingresar a la Consola ➔
                 </span>
               )}
@@ -248,25 +307,23 @@ function Login({ onToken }: { onToken: (t: string, u: { id: number; email: strin
             <button
               type="button"
               onClick={fillDemo}
-              className="admin-quick-fill-btn"
-              title="Autocompletar credenciales de administración"
+              className="admin-autofill-btn"
+              title="Autocompletar credenciales maestras de administrador"
             >
-              ⚡ Usar credenciales maestras de administrador
+              ⚡ Autocompletar credenciales maestras
             </button>
           </form>
 
-          <div className="admin-auth-footer">
-            <div className="auth-security-tag">
-              <span>🛡️ Cifrado JWT SHA-256</span>
-              <span className="auth-dot-sep">·</span>
-              <span>PostgreSQL 16</span>
-            </div>
-            <Link href="/" className="auth-back-link">
+          <footer className="admin-form-footer">
+            <Link href="/" className="admin-return-link">
               ← Volver a la tienda pública
             </Link>
-          </div>
+            <div className="admin-security-note">
+              <span>Cifrado SHA-256</span> · <span>Sesión Protegida</span>
+            </div>
+          </footer>
         </div>
-      </div>
+      </section>
     </div>
   );
 }
