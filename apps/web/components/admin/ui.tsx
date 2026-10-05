@@ -15,13 +15,44 @@ export function Kpi({ label, value, change, hint, money }: { label: string; valu
 export function BarChart({ data, money }: { data: { label: string; value: number }[]; money?: boolean }) {
   if (!data.length) return <p className="muted">Sin datos en este periodo.</p>;
   const max = Math.max(...data.map((d) => d.value), 1);
-  const w = 100 / data.length;
+  const n = Math.max(data.length, 7);
+  const step = 100 / n;
+  const barW = step * 0.55;
   return (
     <div className="chart">
-      <svg viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
-        {data.map((d, i) => { const h = (d.value / max) * 36; return <rect key={i} x={i * w + w * 0.15} y={40 - h} width={w * 0.7} height={h} rx="0.6" fill="var(--green)"><title>{d.label}: {money ? cop(d.value) : d.value}</title></rect>; })}
+      <svg viewBox="0 0 100 44" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="chartBarGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#059669" />
+            <stop offset="100%" stopColor="#10b981" />
+          </linearGradient>
+        </defs>
+        {/* Línea base sutil */}
+        <line x1="0" y1="40" x2="100" y2="40" stroke="#e2e8f0" strokeWidth="0.5" />
+        {data.map((d, i) => {
+          const h = Math.max((d.value / max) * 34, 1.5);
+          const x = i * step + (step - barW) / 2;
+          const y = 40 - h;
+          return (
+            <rect
+              key={i}
+              x={x}
+              y={y}
+              width={barW}
+              height={h}
+              rx="1"
+              fill="url(#chartBarGrad)"
+            >
+              <title>{d.label}: {money ? cop(d.value) : d.value}</title>
+            </rect>
+          );
+        })}
       </svg>
-      <div className="chart-x"><span>{data[0].label}</span><span>{data[data.length - 1].label}</span></div>
+      <div className="chart-x">
+        <span>{data[0]?.label}</span>
+        {data.length > 2 && <span>{data[Math.floor(data.length / 2)]?.label}</span>}
+        <span>{data[data.length - 1]?.label}</span>
+      </div>
     </div>
   );
 }
@@ -30,12 +61,23 @@ export function Distribution({ rows, total, money }: { rows: { label: string; va
   const t = total ?? (rows.reduce((s, r) => s + r.value, 0) || 1);
   return (
     <ul className="dist">
-      {rows.map((r) => (
-        <li key={r.label}>
-          <div className="dist-head"><span>{r.label}</span><b>{money ? cop(r.value) : r.value}</b><small>{Math.round((r.value / t) * 100)}%</small></div>
-          <div className="dist-bar"><span style={{ width: `${(r.value / t) * 100}%` }} /></div>
-        </li>
-      ))}
+      {rows.map((r) => {
+        const pct = Math.round((r.value / t) * 100);
+        return (
+          <li key={r.label}>
+            <div className="dist-head">
+              <span>{r.label}</span>
+              <div>
+                <b>{money ? cop(r.value) : r.value}</b>
+                <small>{pct}%</small>
+              </div>
+            </div>
+            <div className="dist-bar">
+              <span style={{ width: `${pct}%` }} />
+            </div>
+          </li>
+        );
+      })}
     </ul>
   );
 }
