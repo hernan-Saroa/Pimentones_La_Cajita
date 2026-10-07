@@ -474,3 +474,39 @@ export const ContactSchema = z.object({
 });
 export type ContactInput = z.infer<typeof ContactSchema>;
 export const MESSAGE_STATUSES = ['new', 'read', 'answered'] as const;
+
+// Portal de clientes / Consulta de historial con OTP
+export const CustomerHistoryRequestOtpSchema = z.object({
+  email: z.string().trim().email('Escribe un correo electrónico válido.').max(160),
+});
+export type CustomerHistoryRequestOtp = z.infer<typeof CustomerHistoryRequestOtpSchema>;
+
+export const CustomerHistoryVerifyOtpSchema = z.object({
+  email: z.string().trim().email('Escribe un correo electrónico válido.').max(160),
+  code: z.string().trim().length(6, 'El código debe tener 6 dígitos.'),
+});
+export type CustomerHistoryVerifyOtp = z.infer<typeof CustomerHistoryVerifyOtpSchema>;
+
+export const CustomerOrderHistoryItemSchema = z.object({
+  reference: z.string(),
+  status: z.enum(ORDER_STATUSES),
+  paymentMethod: z.enum(PAYMENT_METHODS),
+  subtotal: z.number(),
+  shipping: z.number(),
+  discount: z.number().default(0),
+  total: z.number(),
+  tracking: z.string().nullable(),
+  carrier: z.string().nullable().optional(),
+  city: z.string(),
+  department: z.string().nullable().optional(),
+  eta: z.string().nullable().default(null),
+  createdAt: z.string(),
+  items: z.array(z.object({
+    name: z.string(),
+    unitPrice: z.number(),
+    quantity: z.number(),
+    productId: z.number().nullable().optional(),
+  })),
+});
+export type CustomerOrderHistoryItem = z.infer<typeof CustomerOrderHistoryItemSchema>;
+

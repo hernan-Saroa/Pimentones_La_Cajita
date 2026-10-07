@@ -1,5 +1,5 @@
-import { ProductSchema, StoreInfoSchema, OrderCreatedSchema, PublicOrderSchema, SuggestionSchema, QuoteSchema, SiteContentSchema,
-  type Product, type StoreInfo, type ContactInput, type CreateOrderWithCoupon, type PublicOrder, type Suggestion, type Quote, type QuoteRequest, type SiteContent } from '@lacajita/shared';
+import { ProductSchema, StoreInfoSchema, OrderCreatedSchema, PublicOrderSchema, SuggestionSchema, QuoteSchema, SiteContentSchema, CustomerOrderHistoryItemSchema,
+  type Product, type StoreInfo, type ContactInput, type CreateOrderWithCoupon, type PublicOrder, type Suggestion, type Quote, type QuoteRequest, type SiteContent, type CustomerOrderHistoryItem } from '@lacajita/shared';
 import { z } from 'zod';
 
 /**
@@ -113,6 +113,16 @@ export const api = {
   suggest: (text: string) => request('/suggest', SuggestionSchema, { method: 'POST', body: JSON.stringify({ text }) }),
   contact: (body: ContactInput) => request('/contact', z.object({ ok: z.boolean() }), { method: 'POST', body: JSON.stringify(body) }),
   subscribe: (email: string, consent = true) => request('/subscribe', z.object({ ok: z.boolean() }), { method: 'POST', body: JSON.stringify({ email, consent }) }),
+  requestHistoryOtp: (email: string) =>
+    request('/orders/request-history-otp', z.object({ ok: z.boolean(), message: z.string(), devCode: z.string().optional() }), {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+  verifyHistoryOtp: (email: string, code: string) =>
+    request('/orders/verify-history-otp', z.object({ ok: z.boolean(), email: z.string(), orders: z.array(CustomerOrderHistoryItemSchema) }), {
+      method: 'POST',
+      body: JSON.stringify({ email, code }),
+    }),
   getCache: getCachedData,
   invalidate: invalidateCache,
 };
