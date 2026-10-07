@@ -250,6 +250,7 @@ export function Content() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [openTestimonial, setOpenTestimonial] = useState<number | null>(0);
   const [openPairingIndex, setOpenPairingIndex] = useState<number | null>(0);
+  const [openPillar, setOpenPillar] = useState<number | null>(null);
   const [previewPairingId, setPreviewPairingId] = useState<string>('');
   const [simulatorOpen, setSimulatorOpen] = useState(false);
   const [simDevice, setSimDevice] = useState<'desktop' | 'mobile'>('desktop');
@@ -437,8 +438,6 @@ export function Content() {
     set('faq', list.filter((_, n) => n !== i));
     setOpenFaq(null);
   };
-
-  const [openPillar, setOpenPillar] = useState<number | null>(null);
 
   const movePillar = (i: number, d: -1 | 1) => {
     const list = [...(c.footerPillars || [])];
