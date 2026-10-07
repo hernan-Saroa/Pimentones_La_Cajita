@@ -1,7 +1,16 @@
 import { Body, Controller, Get, HttpCode, Param, Post, Query, UnauthorizedException } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import { CreateOrderWithCouponSchema, QuoteRequestSchema, type CreateOrderWithCoupon, type QuoteRequest } from '@lacajita/shared';
+import {
+  CreateOrderWithCouponSchema,
+  QuoteRequestSchema,
+  CustomerHistoryRequestOtpSchema,
+  CustomerHistoryVerifyOtpSchema,
+  type CreateOrderWithCoupon,
+  type QuoteRequest,
+  type CustomerHistoryRequestOtp,
+  type CustomerHistoryVerifyOtp,
+} from '@lacajita/shared';
 import { PricingService } from './pricing.service';
 import { ZodPipe } from '../common/zod.pipe';
 import { OrdersService } from './orders.service';
@@ -27,6 +36,18 @@ export class OrdersController {
   @Get('orders/:reference') @ApiOperation({ summary: 'Estado de un pedido para el cliente (referencia + correo)' })
   one(@Param('reference') reference: string, @Query('email') email = '', @Query('tx') tx?: string) {
     return this.orders.publicView(reference, email, tx);
+  }
+
+  @Post('orders/request-history-otp') @Throttle({ default: { limit: 10, ttl: 900_000 } })
+  @ApiOperation({ summary: 'Envía un código OTP al correo del cliente para consultar su historial de pedidos' })
+  requestHistoryOtp(@Body(new ZodPipe(CustomerHistoryRequestOtpSchema)) body: CustomerHistoryRequestOtp) {
+    return this.orders.requestHistoryOtp(body.email);
+  }
+
+  @Post('orders/verify-history-otp') @HttpCode(200) @Throttle({ default: { limit: 20, ttl: 900_000 } })
+  @ApiOperation({ summary: 'Verifica el código OTP y devuelve todas las compras del cliente' })
+  verifyHistoryOtp(@Body(new ZodPipe(CustomerHistoryVerifyOtpSchema)) body: CustomerHistoryVerifyOtp) {
+    return this.orders.verifyHistoryOtp(body.email, body.code);
   }
 
   @Post('webhooks/wompi') @HttpCode(200) @ApiOperation({ summary: 'Eventos de Wompi (firma verificada)' })

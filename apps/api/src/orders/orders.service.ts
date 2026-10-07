@@ -1,13 +1,14 @@
-import { ConflictException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { and, eq, inArray, lt, sql } from 'drizzle-orm';
+import { BadRequestException, ConflictException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { and, desc, eq, inArray, lt, sql } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
-import type { CreateOrderWithCoupon, OrderCreated, PublicOrder } from '@lacajita/shared';
+import type { CreateOrderWithCoupon, OrderCreated, PublicOrder, CustomerOrderHistoryItem } from '@lacajita/shared';
 import { DB, type Db } from '../db/db.module';
 import { coupons, orderItems, orders, products, stockMovements, type OrderItemRow, type OrderRow } from '../db/schema';
 import { PricingService } from './pricing.service';
 import { CatalogService } from '../catalog/catalog.service';
 import { WompiService, type WompiTransaction } from '../payments/wompi.service';
 import { JOBS, JobsService } from '../jobs/jobs.service';
+import { MailService } from '../notifications/mail.service';
 import { newReference } from './shipping';
 
 type ItemLite = Pick<OrderItemRow, 'name' | 'unitPrice' | 'quantity' | 'productId'>;
@@ -21,13 +22,81 @@ type ItemLite = Pick<OrderItemRow, 'name' | 'unitPrice' | 'quantity' | 'productI
 @Injectable()
 export class OrdersService {
   private readonly log = new Logger(OrdersService.name);
+  private readonly otpCache = new Map<string, { code: string; expiresAt: number; used: boolean }>();
+
   constructor(
     @Inject(DB) private readonly db: Db,
     private readonly catalog: CatalogService,
     private readonly wompi: WompiService,
     private readonly jobs: JobsService,
     private readonly pricing: PricingService,
+    private readonly mail: MailService,
   ) {}
+
+  /** Solicita un código de verificación OTP para consultar el historial de compras por correo. */
+  async requestHistoryOtp(email: string): Promise<{ ok: boolean; message: string; devCode?: string }> {
+    const cleanEmail = email.trim().toLowerCase();
+
+    // Validar si existen pedidos asociados a este correo
+    const [found] = await this.db.select({ count: sql<number>`count(*)` }).from(orders).where(eq(orders.customerEmail, cleanEmail));
+    const totalOrders = Number(found?.count || 0);
+    if (totalOrders === 0) {
+      throw new NotFoundException('No encontramos pedidos asociados a este correo. Verifica si realizaste tu compra con otro correo.');
+    }
+
+    // Generar código de 6 dígitos con 15 minutos de vigencia
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 15 * 60 * 1000;
+
+    this.otpCache.set(cleanEmail, { code, expiresAt, used: false });
+
+    await this.mail.sendOtp(cleanEmail, code);
+
+    return {
+      ok: true,
+      message: `Enviamos un código de 6 dígitos a ${cleanEmail}`,
+      devCode: !this.mail.enabled ? code : undefined,
+    };
+  }
+
+  /** Valida el código OTP y devuelve todas las compras del cliente directamente de la base de datos. */
+  async verifyHistoryOtp(email: string, code: string): Promise<{ ok: boolean; email: string; orders: CustomerOrderHistoryItem[] }> {
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanCode = code.trim();
+
+    const cached = this.otpCache.get(cleanEmail);
+    if (!cached || cached.code !== cleanCode || cached.used || cached.expiresAt < Date.now()) {
+      throw new BadRequestException('El código de verificación es incorrecto o ha expirado. Por favor solicita uno nuevo.');
+    }
+
+    cached.used = true;
+
+    // Obtener todos los pedidos asociados al correo
+    const orderRows = await this.db.select().from(orders).where(eq(orders.customerEmail, cleanEmail)).orderBy(desc(orders.createdAt));
+
+    const result: CustomerOrderHistoryItem[] = [];
+    for (const o of orderRows) {
+      const items = await this.itemsOf(o.id);
+      result.push({
+        reference: o.reference,
+        status: o.status as PublicOrder['status'],
+        paymentMethod: o.paymentMethod as PublicOrder['paymentMethod'],
+        subtotal: o.subtotal,
+        shipping: o.shipping,
+        discount: o.discount,
+        total: o.total,
+        tracking: o.tracking,
+        carrier: o.carrier,
+        city: o.city,
+        department: o.department,
+        eta: o.etaDays,
+        createdAt: o.createdAt.toISOString(),
+        items: items.map((i) => ({ name: i.name, unitPrice: i.unitPrice, quantity: i.quantity, productId: i.productId })),
+      });
+    }
+
+    return { ok: true, email: cleanEmail, orders: result };
+  }
 
   async create(input: CreateOrderWithCoupon): Promise<OrderCreated> {
     if (input.paymentMethod === 'wompi' && !this.wompi.enabled) throw new ConflictException('El pago en línea no está disponible en este momento.');

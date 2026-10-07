@@ -3654,7 +3654,7 @@ export function Content() {
 
                   {/* 1-Click Upsell "Completa tu mesa" */}
                   <div className="bo-box" style={{ padding: 16 }}>
-                    <h4 style={{ margin: '0 0 12px', fontSize: 15, fontWeight: 700 }}>Sugerencia 1-Click Upsell ("Completa tu mesa")</h4>
+                    <h4 style={{ margin: '0 0 12px', fontSize: 15, fontWeight: 700 }}>Sugerencia 1-Click Upsell (&quot;Completa tu mesa&quot;)</h4>
                     <div className="bo-stack" style={{ gap: 14 }}>
                       <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13 }}>
                         <input

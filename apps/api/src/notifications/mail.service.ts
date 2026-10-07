@@ -71,4 +71,23 @@ export class MailService {
         text: `${m.message}\n\n—\n${m.name}\n${m.email}${m.phone ? `\n${m.phone}` : ''}\n\nResponde a este correo para contestarle. Panel: ${this.cfg.publicUrl}/admin/mensajes` });
     } catch (e) { this.log.error(`No se pudo enviar aviso de contacto: ${(e as Error).message}`); }
   }
+
+  /** Código OTP para consultar el historial de pedidos de un cliente. */
+  async sendOtp(email: string, code: string) {
+    const text = [
+      `Hola,`,
+      ``,
+      `Tu código de acceso para consultar tus pedidos en Pimentones La Cajita es:`,
+      ``,
+      `    ${code}`,
+      ``,
+      `Este código es válido durante 15 minutos. Si no solicitaste este código, puedes ignorar este correo.`,
+      ``,
+      `Con cariño,`,
+      `El equipo de Pimentones La Cajita`,
+      `${this.cfg.publicUrl}`
+    ].join('\n');
+
+    await this.send(email, `Tu código de acceso: ${code} · Pimentones La Cajita`, text);
+  }
 }
