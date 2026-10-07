@@ -2148,6 +2148,276 @@ input[aria-invalid='true'], select[aria-invalid='true'] { border-color: var(--re
   }
 }
 
+/* ===== 6D. Historial de Pedidos y Pestañas World-Class (/mi-pedido) ===== */
+.track-tabs {
+  display: flex;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 4px;
+  border-radius: 999px;
+  margin: 0 auto 2rem auto;
+  max-width: 480px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+.track-tab-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0.65rem 1.1rem;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.track-tab-btn.is-active {
+  background: #ffffff;
+  color: #1a1a1a;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+.track-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: #8b1e1e;
+  color: #fff;
+}
+.track-history-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+.order-history-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+.order-history-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  border-color: rgba(139, 30, 30, 0.3);
+}
+.order-history-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  margin-bottom: 1rem;
+}
+.order-ref-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.order-ref-badge {
+  font-family: monospace, ui-monospace, sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #1a1a1a;
+  background: #f5f3ef;
+  padding: 0.25rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+.order-copy-btn {
+  background: transparent;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+.order-copy-btn:hover {
+  color: #8b1e1e;
+  background: rgba(139, 30, 30, 0.06);
+}
+.order-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.order-status-pill.status-pending { background: #fef3c7; color: #92400e; }
+.order-status-pill.status-paid { background: #dcfce7; color: #166534; }
+.order-status-pill.status-preparing { background: #f3e8ff; color: #6b21a8; }
+.order-status-pill.status-shipped { background: #e0f2fe; color: #0369a1; }
+.order-status-pill.status-delivered { background: #d1fae5; color: #065f46; }
+.order-status-pill.status-failed,
+.order-status-pill.status-cancelled { background: #fee2e2; color: #991b1b; }
+
+.order-history-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.order-grid-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.order-grid-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #888;
+  font-weight: 600;
+}
+.order-grid-val {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+.order-history-summary {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 1.25rem;
+  background: #faf8f5;
+  padding: 0.6rem 0.9rem;
+  border-radius: 10px;
+  border-left: 3px solid #8b1e1e;
+}
+.order-history-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.order-track-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #8b1e1e;
+  color: #ffffff;
+  padding: 0.7rem 1.4rem;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+.order-track-action-btn:hover {
+  background: #6e1717;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(139, 30, 30, 0.3);
+}
+.order-remove-btn {
+  background: transparent;
+  border: none;
+  color: #999;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: color 0.15s ease;
+}
+.order-remove-btn:hover {
+  color: #dc2626;
+}
+
+/* ===== 6E. Guardado de Direcciones en Checkout ===== */
+.checkout-saved-address-section {
+  margin-bottom: 1.5rem;
+}
+.checkout-address-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 1rem 1.2rem;
+  border: 2px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 0.75rem;
+}
+.checkout-address-card:hover {
+  border-color: rgba(139, 30, 30, 0.4);
+  background: #fffdfb;
+}
+.checkout-address-card.is-selected {
+  border-color: #8b1e1e;
+  background: rgba(139, 30, 30, 0.02);
+  box-shadow: 0 4px 16px rgba(139, 30, 30, 0.08);
+}
+.checkout-address-radio {
+  margin-top: 3px;
+  accent-color: #8b1e1e;
+}
+.checkout-address-details {
+  flex: 1;
+}
+.checkout-address-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #1a1a1a;
+  margin-bottom: 3px;
+}
+.checkout-address-badge {
+  font-size: 0.68rem;
+  background: rgba(139, 30, 30, 0.1);
+  color: #8b1e1e;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.checkout-address-text {
+  font-size: 0.88rem;
+  color: #555;
+  line-height: 1.4;
+  margin: 0;
+}
+.checkout-welcome-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #fdfaf5;
+  border: 1px solid #fae8c8;
+  border-radius: 12px;
+  padding: 0.85rem 1.1rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.9rem;
+  color: #78350f;
+}
+.checkout-welcome-text strong {
+  color: #1a1a1a;
+}
+
 /* ===== 6C. Stepper de Pedido World-Class ===== */
 .steps {
   display: flex;

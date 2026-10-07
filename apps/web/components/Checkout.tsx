@@ -7,6 +7,13 @@ import { api } from '@/lib/api';
 import { trackOnce, sessionId } from '@/lib/track';
 import { useCart, cartTotals, type CartLine } from '@/store/cart';
 import { Back, Chevron, Lock } from './icons';
+import {
+  getCustomerProfile,
+  saveCustomerAddress,
+  clearCustomerData,
+  saveOrderToHistory,
+  type SavedAddress,
+} from '@/lib/customerStorage';
 
 const SAVED = 'lacajita.customer';
 const norm = (s: unknown) => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
@@ -46,6 +53,8 @@ export function Checkout() {
   const [step, setStep] = useState(0);
   const [f, setF] = useState<Form>(EMPTY);
   const [prefilled, setPrefilled] = useState(false);
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>('new');
   const [errors, setErrors] = useState<Errors>({});
   const [remember, setRemember] = useState(true);
   const [sending, setSending] = useState(false);
@@ -58,7 +67,44 @@ export function Checkout() {
   const [quoting, setQuoting] = useState(false);
   const top = useRef<HTMLElement>(null);
 
-  useEffect(() => { const l = load(); setF(l.f); setPrefilled(l.prefilled); setReady(true); api.store().then((s) => { setStore(s); setMethod(s.paymentMethods[0]); }).catch((e) => setError(e.message)); }, []);
+  useEffect(() => {
+    const profile = getCustomerProfile();
+    if (profile && (profile.name || profile.email)) {
+      setPrefilled(true);
+      const addrs = profile.addresses || [];
+      setSavedAddresses(addrs);
+      const defaultAddr = addrs.find((a) => a.id === profile.defaultAddressId) || addrs[0];
+      if (defaultAddr) {
+        setSelectedAddressId(defaultAddr.id);
+        setF({
+          name: profile.name || '',
+          email: profile.email || '',
+          phone: profile.phone || '',
+          doc: profile.doc || '',
+          address: defaultAddr.address || '',
+          address2: defaultAddr.address2 || '',
+          city: defaultAddr.city || '',
+          department: defaultAddr.department || '',
+          notes: defaultAddr.notes || '',
+        });
+      } else {
+        setF({
+          ...EMPTY,
+          name: profile.name || '',
+          email: profile.email || '',
+          phone: profile.phone || '',
+          doc: profile.doc || '',
+        });
+      }
+    } else {
+      const l = load();
+      setF(l.f);
+      setPrefilled(l.prefilled);
+    }
+
+    setReady(true);
+    api.store().then((s) => { setStore(s); setMethod(s.paymentMethods[0]); }).catch((e) => setError(e.message));
+  }, []);
   useEffect(() => { if (ready && lines.length) trackOnce('checkout', 'begin_checkout', { value: subtotal }); }, [ready]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (step > 0) top.current?.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, [step]);
 
@@ -105,9 +151,43 @@ export function Checkout() {
       const notes = [giftPrefix, f.notes.trim()].filter(Boolean).join('\n\n');
       const res = await api.createOrder({ items: lines.map((l) => ({ productId: l.id, quantity: l.qty })), paymentMethod: method, coupon: quote?.coupon?.code ?? '', sessionId: sessionId(),
         customer: { name: f.name, email: f.email, phone: f.phone, doc: f.doc, address, city: f.city, department: f.department, notes } });
+
+      // Guardar pedido en el historial del dispositivo
+      saveOrderToHistory({
+        reference: res.reference,
+        email: f.email,
+        date: new Date().toISOString(),
+        total: total,
+        itemCount: count,
+        itemsSummary: lines.map((l) => `${l.qty}x ${l.name}`).join(', '),
+        status: method === 'wompi' ? 'pending' : 'pending',
+        city: f.city,
+        department: f.department,
+      });
+
       try {
         sessionStorage.setItem(`lacajita.order.${res.reference}`, f.email);
-        if (remember) { const { notes: _n, ...keep } = f; localStorage.setItem(SAVED, JSON.stringify(keep)); } else localStorage.removeItem(SAVED);
+        if (remember) {
+          saveCustomerAddress(
+            {
+              label: 'Dirección habitual',
+              address: f.address,
+              address2: f.address2,
+              city: f.city,
+              department: f.department,
+              notes: f.notes,
+              isDefault: true,
+            },
+            {
+              name: f.name,
+              email: f.email,
+              phone: f.phone,
+              doc: f.doc,
+            }
+          );
+        } else {
+          clearCustomerData();
+        }
       } catch { /* sin almacenamiento */ }
       // Con pago en línea el carrito se conserva hasta que Wompi apruebe (por si el cliente vuelve sin pagar).
       if (res.paymentUrl) window.location.assign(res.paymentUrl);
@@ -134,7 +214,27 @@ export function Checkout() {
         {step === 0 && (
           <fieldset className="step">
             <legend className="h-page">¿A quién le enviamos?</legend>
-            {prefilled && <p className="prefill" role="status">Usamos los datos de tu última compra. <button type="button" className="link-btn" onClick={() => { setF(EMPTY); setPrefilled(false); try { localStorage.removeItem(SAVED); } catch { /* */ } }}>Empezar de cero</button></p>}
+            {prefilled && f.name && (
+              <div className="checkout-welcome-banner" role="status">
+                <span className="checkout-welcome-text">
+                  👋 ¡Hola de nuevo, <strong>{f.name.split(' ')[0]}</strong>! Hemos cargado tus datos de compra.
+                </span>
+                <button
+                  type="button"
+                  className="link-btn"
+                  style={{ fontSize: '0.85rem', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', color: '#8b1e1e', fontWeight: 600 }}
+                  onClick={() => {
+                    setF(EMPTY);
+                    setPrefilled(false);
+                    setSavedAddresses([]);
+                    setSelectedAddressId('new');
+                    clearCustomerData();
+                  }}
+                >
+                  Empezar de cero
+                </button>
+              </div>
+            )}
             <label className="field">Nombre y apellido<input value={f.name} onChange={set('name')} autoComplete="name" autoFocus {...inv('name')} /><Err k="name" /></label>
             <label className="field">Celular<input value={f.phone} onChange={set('phone')} inputMode="numeric" autoComplete="tel-national" placeholder="300 123 4567" {...inv('phone')} /><span className="fhelp">Te escribimos por WhatsApp si hay alguna novedad con la entrega.</span><Err k="phone" /></label>
             <label className="field">Correo<input value={f.email} onChange={set('email')} type="email" inputMode="email" autoComplete="email" autoCapitalize="off" placeholder="ana@gmail.com" {...inv('email')} /><span className="fhelp">Ahí te llega la confirmación del pedido.</span><Err k="email" /></label>
@@ -143,10 +243,88 @@ export function Checkout() {
         {step === 1 && (
           <fieldset className="step">
             <legend className="h-page">¿A dónde lo enviamos?</legend>
-            <CityField value={f.city} onChange={setCity} error={errors.city} />
-            <label className="field">Departamento<select value={f.department} onChange={set('department')} {...inv('department')}><option value="">Elige…</option>{DEPARTAMENTOS.map((d) => <option key={d}>{d}</option>)}</select><Err k="department" /></label>
-            <label className="field">Dirección<input value={f.address} onChange={set('address')} autoComplete="street-address" placeholder="Calle 45 # 12-30" {...inv('address')} /><Err k="address" /></label>
-            <label className="field">Apartamento, torre, conjunto o barrio <span className="opt">(si aplica)</span><input value={f.address2} onChange={set('address2')} placeholder="Torre 2, apto 501, barrio Chapinero" /></label>
+
+            {savedAddresses.length > 0 && (
+              <div className="checkout-saved-address-section">
+                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#666', marginBottom: '0.6rem' }}>
+                  Elige una dirección habitual o ingresa una nueva:
+                </div>
+
+                {savedAddresses.map((addr) => {
+                  const isSel = selectedAddressId === addr.id;
+                  return (
+                    <div
+                      key={addr.id}
+                      className={`checkout-address-card ${isSel ? 'is-selected' : ''}`}
+                      onClick={() => {
+                        setSelectedAddressId(addr.id);
+                        setF({
+                          ...f,
+                          address: addr.address,
+                          address2: addr.address2 || '',
+                          city: addr.city,
+                          department: addr.department,
+                          notes: addr.notes || f.notes,
+                        });
+                        setErrors({ ...errors, address: undefined, city: undefined, department: undefined });
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name="saved_address"
+                        checked={isSel}
+                        onChange={() => {}}
+                        className="checkout-address-radio"
+                      />
+                      <div className="checkout-address-details">
+                        <div className="checkout-address-title">
+                          <span>🏠 {addr.label || 'Dirección habitual'}</span>
+                          {addr.isDefault && <span className="checkout-address-badge">Principal</span>}
+                        </div>
+                        <p className="checkout-address-text">
+                          {addr.address} {addr.address2 ? `· ${addr.address2}` : ''}<br />
+                          <strong>{addr.city}, {addr.department}</strong>
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                <div
+                  className={`checkout-address-card ${selectedAddressId === 'new' ? 'is-selected' : ''}`}
+                  onClick={() => {
+                    setSelectedAddressId('new');
+                    setF({ ...f, address: '', address2: '', city: '', department: '' });
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="saved_address"
+                    checked={selectedAddressId === 'new'}
+                    onChange={() => {}}
+                    className="checkout-address-radio"
+                  />
+                  <div className="checkout-address-details">
+                    <div className="checkout-address-title">
+                      <span>➕ Usar una dirección diferente</span>
+                    </div>
+                    <p className="checkout-address-text">
+                      Escribe una nueva dirección para este pedido.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {(selectedAddressId === 'new' || savedAddresses.length === 0) && (
+              <>
+                <CityField value={f.city} onChange={setCity} error={errors.city} />
+                <label className="field">Departamento<select value={f.department} onChange={set('department')} {...inv('department')}><option value="">Elige…</option>{DEPARTAMENTOS.map((d) => <option key={d}>{d}</option>)}</select><Err k="department" /></label>
+                <label className="field">Dirección<input value={f.address} onChange={set('address')} autoComplete="street-address" placeholder="Calle 45 # 12-30" {...inv('address')} /><Err k="address" /></label>
+                <label className="field">Apartamento, torre, conjunto o barrio <span className="opt">(si aplica)</span><input value={f.address2} onChange={set('address2')} placeholder="Torre 2, apto 501, barrio Chapinero" /></label>
+              </>
+            )}
+
             {quote && <p className="ship-note" role="status">{quote.shipping === 0 ? <>Envío <b>gratis</b> a {f.city || f.department}.</> : <>Envío a {f.city || f.department}: <b>{cop(quote.shipping)}</b>.</>}{quote.eta && <> Llega en <b>{quote.eta}</b>.</>}</p>}
             {gift?.isGift && (
               <div className="checkout-gift-card">

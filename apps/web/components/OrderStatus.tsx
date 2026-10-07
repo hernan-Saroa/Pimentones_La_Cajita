@@ -7,6 +7,8 @@ import { api } from '@/lib/api';
 import { useCart } from '@/store/cart';
 import { trackOnce } from '@/lib/track';
 
+import { saveOrderToHistory } from '@/lib/customerStorage';
+
 const STEPS = ['paid', 'preparing', 'shipped', 'delivered'] as const;
 
 export function OrderStatus({ reference }: { reference: string }) {
@@ -42,13 +44,18 @@ export function OrderStatus({ reference }: { reference: string }) {
         .order(reference, q)
         .then((x) => {
           setO(x);
-          // Si fue exitoso, recordar en localStorage para consultas futuras con 1 clic
-          try {
-            localStorage.setItem('lacajita_recent_ref', reference);
-            if (email) localStorage.setItem('lacajita_recent_email', email);
-          } catch {
-            /* */
-          }
+          // Actualizar / guardar en historial local para consulta en 1 clic
+          saveOrderToHistory({
+            reference: x.reference,
+            email: email || '',
+            date: x.createdAt || new Date().toISOString(),
+            total: x.total,
+            itemCount: x.items?.reduce((acc, it) => acc + it.quantity, 0),
+            itemsSummary: x.items?.map((it) => `${it.quantity}x ${it.name}`).join(', '),
+            status: x.status,
+            city: x.city,
+          });
+
           if (x.status === 'pending' && x.paymentMethod === 'wompi' && tries++ < 6) {
             timer = setTimeout(load, 3000);
           }
