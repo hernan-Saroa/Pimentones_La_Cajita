@@ -70,6 +70,21 @@ export class AdminService {
   }
 
   subscribers() { return this.db.select().from(subscribers).orderBy(desc(subscribers.createdAt)); }
+  async updateSubscriber(id: number, patch: { consent?: boolean; status?: string }) {
+    const set: Record<string, any> = {};
+    if (patch.consent !== undefined) {
+      set.consent = patch.consent;
+      if (patch.consent) set.consentAt = new Date();
+    }
+    if (patch.status) set.status = patch.status;
+    const [u] = await this.db.update(subscribers).set(set).where(eq(subscribers.id, id)).returning();
+    if (!u) throw new NotFoundException('Suscriptor no encontrado.');
+    return u;
+  }
+  async deleteSubscriber(id: number) {
+    await this.db.delete(subscribers).where(eq(subscribers.id, id));
+    return { ok: true };
+  }
 
   // Mensajes de contacto
   messages(status?: string) { return this.db.select().from(messages).where(status ? eq(messages.status, status) : undefined).orderBy(desc(messages.createdAt)).limit(200); }

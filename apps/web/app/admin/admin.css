@@ -3544,5 +3544,242 @@ div[data-nextjs-dev-tools-button],
   flex-shrink: 0;
 }
 
+/* Role cards & Team Hub */
+.bo-roles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.bo-role-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 2px 8px -2px rgba(28, 25, 23, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+.bo-role-card:hover {
+  border-color: var(--line-2);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px -4px rgba(28, 25, 23, 0.08);
+}
+.bo-role-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.bo-role-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.bo-role-count-pill {
+  white-space: nowrap;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--subtle);
+  color: var(--ink-2);
+  flex-shrink: 0;
+}
+.bo-perm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  line-height: 1.4;
+}
+.bo-perm.no {
+  color: var(--faint);
+  text-decoration: line-through;
+  opacity: 0.65;
+}
+.bo-perm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+/* Granular Roles & Permissions Management */
+.bo-role-card-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.bo-role-perm-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--subtle);
+  border: 1px solid var(--line);
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+.bo-role-perm-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+  width: 100%;
+}
+.bo-role-perm-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--brand);
+  transition: width 0.3s ease;
+}
+.bo-role-modules-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.bo-role-module-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--subtle);
+  border: 1px solid var(--line);
+  color: var(--ink-2);
+  font-weight: 500;
+}
+.bo-role-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+/* Color swatches & Icon picker */
+.bo-swatches {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.bo-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+.bo-swatch:hover {
+  transform: scale(1.1);
+}
+.bo-swatch.is-active {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink);
+}
+.bo-icon-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+  gap: 8px;
+}
+.bo-icon-choice {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: var(--ink-2);
+}
+.bo-icon-choice:hover {
+  border-color: var(--line-2);
+  background: var(--subtle);
+  color: var(--ink);
+}
+.bo-icon-choice.is-active {
+  border-color: var(--brand);
+  background: var(--brand-50);
+  color: var(--brand);
+  box-shadow: 0 0 0 2px var(--brand-100);
+}
+
+/* Module permissions container & items */
+.bo-perm-module-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.15s ease;
+}
+.bo-perm-module-card:hover {
+  border-color: var(--line-2);
+}
+.bo-perm-module-header {
+  padding: 12px 16px;
+  background: var(--subtle);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.bo-perm-module-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.bo-perm-module-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+  padding: 14px 16px;
+}
+.bo-perm-toggle-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+}
+.bo-perm-toggle-item:hover {
+  background: var(--subtle);
+  border-color: var(--line-2);
+}
+.bo-perm-toggle-item.is-selected {
+  background: var(--brand-50);
+  border-color: var(--brand-200);
+}
+.bo-perm-toggle-item input[type="checkbox"] {
+  margin-top: 3px;
+  accent-color: var(--brand);
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+
 
 

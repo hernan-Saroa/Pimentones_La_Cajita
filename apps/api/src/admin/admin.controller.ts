@@ -8,7 +8,7 @@ import { mkdir } from 'fs/promises';
 import { pipeline } from 'stream/promises';
 import { join } from 'path';
 import { z } from 'zod';
-import { AdminUserCreateSchema, AdminUserUpdateSchema, BatchCreateSchema, MESSAGE_STATUSES, CouponUpsertSchema, LoginSchema, OrderAdminUpdateSchema, ProductUpsertSchema, SettingsSchema, SiteContentSchema, StockAdjustSchema, ZoneUpsertSchema, type CouponUpsert, type ProductUpsert, type SiteContent } from '@lacajita/shared';
+import { AdminUserCreateSchema, AdminUserUpdateSchema, BatchCreateSchema, MESSAGE_STATUSES, CouponUpsertSchema, LoginSchema, OrderAdminUpdateSchema, ProductUpsertSchema, RoleCreateSchema, RoleUpdateSchema, SettingsSchema, SiteContentSchema, StockAdjustSchema, ZoneUpsertSchema, type CouponUpsert, type ProductUpsert, type SiteContent } from '@lacajita/shared';
 import { ZodPipe } from '../common/zod.pipe';
 import { Actor, AdminAuthService, AdminGuard, MinRole, type AdminIdentity } from './auth';
 import { AdminService } from './admin.service';
@@ -138,6 +138,8 @@ export class AdminProtectedController {
   // ---- Boletín ----
   @Get('subscribers') subscribers() { return this.admin.subscribers(); }
   @Get('subscribers/export.csv') @Header('Content-Type', 'text/csv; charset=utf-8') @Header('Content-Disposition', 'attachment; filename="suscriptores.csv"') subscribersCsv() { return this.bo.subscribersCsv(); }
+  @Patch('subscribers/:id') @MinRole('ops') updateSubscriber(@Param('id', ParseIntPipe) id: number, @Body() b: { consent?: boolean; status?: string }) { return this.admin.updateSubscriber(id, b); }
+  @Delete('subscribers/:id') @MinRole('ops') deleteSubscriber(@Param('id', ParseIntPipe) id: number) { return this.admin.deleteSubscriber(id); }
 
   // ---- Ajustes ----
   @Get('settings') settings() { return this.admin.settings(); }
@@ -148,4 +150,22 @@ export class AdminProtectedController {
   @Post('users') @MinRole('owner') async createUser(@Body(new ZodPipe(AdminUserCreateSchema)) u: any, @Actor() a: AdminIdentity) { const r = await this.bo.createUser(u); await this.audit.log(a.email, 'crear', 'usuario', r.email, { role: r.role }); return r; }
   @Patch('users/:id') @MinRole('owner') async updateUser(@Param('id', ParseIntPipe) id: number, @Body(new ZodPipe(AdminUserUpdateSchema)) u: any, @Actor() a: AdminIdentity) { const r = await this.bo.updateUser(id, u, a.id); await this.audit.log(a.email, 'editar', 'usuario', r.email, { role: u.role, active: u.active }); return r; }
   @Get('audit') @MinRole('admin') auditLog(@Query('limit') limit?: string) { return this.audit.recent(Math.min(Number(limit) || 100, 500)); }
+
+  // ---- Roles y Permisos Granulares ----
+  @Get('roles') @MinRole('admin') getRoles() { return this.bo.getRoles(); }
+  @Post('roles') @MinRole('owner') async createRole(@Body(new ZodPipe(RoleCreateSchema)) b: any, @Actor() a: AdminIdentity) {
+    const r = await this.bo.createRole(b);
+    await this.audit.log(a.email, 'crear', 'rol', r.id, { name: r.name, permissionsCount: r.permissions.length });
+    return r;
+  }
+  @Put('roles/:id') @MinRole('owner') async updateRole(@Param('id') id: string, @Body(new ZodPipe(RoleUpdateSchema)) b: any, @Actor() a: AdminIdentity) {
+    const r = await this.bo.updateRole(id, b);
+    await this.audit.log(a.email, 'editar', 'rol', id, { name: r.name, permissionsCount: r.permissions.length });
+    return r;
+  }
+  @Delete('roles/:id') @MinRole('owner') async deleteRole(@Param('id') id: string, @Actor() a: AdminIdentity) {
+    const r = await this.bo.deleteRole(id);
+    await this.audit.log(a.email, 'eliminar', 'rol', id);
+    return r;
+  }
 }

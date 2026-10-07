@@ -162,14 +162,189 @@ export const StockAdjustSchema = z.object({
 });
 
 export const ADMIN_ROLES = ['owner', 'admin', 'ops', 'viewer'] as const;
-export type AdminRole = (typeof ADMIN_ROLES)[number];
+export type AdminRole = (typeof ADMIN_ROLES)[number] | string;
+
+export type PlatformPermission = {
+  id: string;
+  module: string;
+  label: string;
+  desc: string;
+};
+
+export const PLATFORM_PERMISSIONS: PlatformPermission[] = [
+  // 1. Tablero y Analítica
+  { id: 'dashboard.view', module: 'Tablero', label: 'Ver métricas y ventas', desc: 'Acceso al tablero principal con indicadores y gráficos' },
+  { id: 'dashboard.export', module: 'Tablero', label: 'Exportar reportes', desc: 'Descargar datos analíticos y embudo de conversión' },
+
+  // 2. Pedidos y Ventas
+  { id: 'orders.view', module: 'Pedidos', label: 'Ver pedidos', desc: 'Consultar listado, filtros y detalle de órdenes' },
+  { id: 'orders.edit_status', module: 'Pedidos', label: 'Cambiar estados', desc: 'Marcar pedidos como pagados, en preparación o cancelados' },
+  { id: 'orders.dispatch', module: 'Pedidos', label: 'Despachar y guías', desc: 'Asignar número de guía, transportadora y fecha estimada' },
+  { id: 'orders.notes', module: 'Pedidos', label: 'Notas internas', desc: 'Agregar notas privadas y observaciones a los pedidos' },
+  { id: 'orders.export', module: 'Pedidos', label: 'Exportar pedidos CSV', desc: 'Descargar listado de pedidos en formato CSV/Excel' },
+
+  // 3. Clientes y Suscriptores
+  { id: 'customers.view', module: 'Clientes', label: 'Ver clientes', desc: 'Consultar historial de compras y datos de compradores' },
+  { id: 'customers.export', module: 'Clientes', label: 'Exportar clientes CSV', desc: 'Descargar base de datos de compradores' },
+  { id: 'customers.subscribers', module: 'Clientes', label: 'Gestionar boletín', desc: 'Administrar suscriptores y autorizaciones Habeas Data' },
+
+  // 4. Catálogo y Productos
+  { id: 'products.view', module: 'Catálogo', label: 'Ver productos', desc: 'Consultar fichas técnicas, precios e inventario' },
+  { id: 'products.create', module: 'Catálogo', label: 'Crear productos', desc: 'Publicar nuevos sabores, variantes y recetas' },
+  { id: 'products.edit', module: 'Catálogo', label: 'Editar productos', desc: 'Modificar precios, fotos, descripciones y destacados' },
+  { id: 'products.delete', module: 'Catálogo', label: 'Desactivar productos', desc: 'Ocultar o descontinuar productos de la tienda' },
+
+  // 5. Inventario y Lotes
+  { id: 'inventory.view', module: 'Inventario', label: 'Ver existencias', desc: 'Consultar niveles de stock y alertas de reposición' },
+  { id: 'inventory.batches', module: 'Inventario', label: 'Registrar lotes', desc: 'Ingresar nuevos lotes de producción y vencimientos' },
+  { id: 'inventory.adjust', module: 'Inventario', label: 'Ajustes de stock', desc: 'Registrar mermas, degustaciones o correcciones' },
+  { id: 'inventory.movements', module: 'Inventario', label: 'Kardex y movimientos', desc: 'Auditar historial de entradas y salidas de frascos' },
+
+  // 6. Cupones y Promociones
+  { id: 'coupons.view', module: 'Cupones', label: 'Ver cupones', desc: 'Consultar códigos de descuento activos e historial' },
+  { id: 'coupons.manage', module: 'Cupones', label: 'Gestionar cupones', desc: 'Crear, editar porcentajes, fechas y desactivar cupones' },
+
+  // 7. Envíos y Tarifas
+  { id: 'shipping.view', module: 'Envíos', label: 'Ver zonas de entrega', desc: 'Consultar tarifas y departamentos habilitados' },
+  { id: 'shipping.manage', module: 'Envíos', label: 'Modificar tarifas', desc: 'Ajustar costos de flete, tiempos y contraentrega' },
+
+  // 8. Mensajes y PQRS
+  { id: 'messages.view', module: 'Mensajes', label: 'Bandeja de entrada', desc: 'Leer consultas y mensajes enviados por clientes' },
+  { id: 'messages.reply', module: 'Mensajes', label: 'Responder mensajes', desc: 'Contestar vía correo/WhatsApp y cambiar estado' },
+  { id: 'messages.notes', module: 'Mensajes', label: 'Notas internas', desc: 'Agregar notas privadas de seguimiento' },
+  { id: 'messages.delete', module: 'Mensajes', label: 'Eliminar mensajes', desc: 'Depurar mensajes o descartar spam' },
+
+  // 9. Contenido de Tienda (CMS)
+  { id: 'content.view', module: 'Contenido', label: 'Ver contenido', desc: 'Consultar textos, banners y preguntas frecuentes' },
+  { id: 'content.manage', module: 'Contenido', label: 'Editar contenido', desc: 'Modificar portada, lemas, historia, FAQ y maridajes' },
+
+  // 10. Ajustes del Negocio
+  { id: 'settings.view', module: 'Ajustes', label: 'Ver configuración', desc: 'Consultar parámetros generales de la tienda' },
+  { id: 'settings.manage', module: 'Ajustes', label: 'Modificar ajustes', desc: 'Editar WhatsApp, flete gratis, pasarela Wompi y correos' },
+
+  // 11. Equipo y Seguridad
+  { id: 'users.view', module: 'Seguridad', label: 'Ver equipo', desc: 'Consultar lista de colaboradores y accesos' },
+  { id: 'users.manage', module: 'Seguridad', label: 'Gestionar usuarios', desc: 'Invitar personas, restablecer claves o suspender' },
+  { id: 'roles.manage', module: 'Seguridad', label: 'Gestionar roles', desc: 'Crear roles personalizados y editar matrices de permisos' },
+  { id: 'audit.view', module: 'Seguridad', label: 'Ver bitácora', desc: 'Consultar registro forense de todas las acciones' },
+];
+
+export const RoleDefinitionSchema = z.object({
+  id: z.string().trim().min(2).max(60).regex(/^[a-z0-9_-]+$/, 'El identificador debe ser en minúsculas sin espacios'),
+  name: z.string().trim().min(2).max(80),
+  desc: z.string().trim().max(300).default(''),
+  badge: z.string().trim().max(50).default('Personalizado'),
+  tone: z.enum(['violet', 'blue', 'green', 'amber', 'red', 'gray']).default('blue'),
+  icon: z.enum(['shield', 'key', 'box', 'eye', 'truck', 'users', 'sliders', 'star', 'tag', 'inbox']).default('shield'),
+  isSystem: z.boolean().default(false),
+  permissions: z.array(z.string()),
+  recommendation: z.string().trim().max(300).optional().default(''),
+});
+export type RoleDefinition = z.infer<typeof RoleDefinitionSchema>;
+
+export const RoleCreateSchema = RoleDefinitionSchema.omit({ isSystem: true });
+export const RoleUpdateSchema = RoleCreateSchema.partial().extend({
+  permissions: z.array(z.string()).optional(),
+});
+
+export const DEFAULT_SYSTEM_ROLES: RoleDefinition[] = [
+  {
+    id: 'owner',
+    name: 'Propietario',
+    desc: 'Control total de la marca, el negocio y el equipo.',
+    badge: 'Máximo nivel',
+    tone: 'violet',
+    icon: 'key',
+    isSystem: true,
+    permissions: ['*'],
+    recommendation: 'Reservado para los fundadores y propietarios legales.',
+  },
+  {
+    id: 'admin',
+    name: 'Administrador',
+    desc: 'Gestión integral del catálogo, precios, inventario y configuración.',
+    badge: 'Gestión general',
+    tone: 'blue',
+    icon: 'shield',
+    isSystem: true,
+    permissions: [
+      'dashboard.view', 'dashboard.export',
+      'orders.view', 'orders.edit_status', 'orders.dispatch', 'orders.notes', 'orders.export',
+      'customers.view', 'customers.export', 'customers.subscribers',
+      'products.view', 'products.create', 'products.edit', 'products.delete',
+      'inventory.view', 'inventory.batches', 'inventory.adjust', 'inventory.movements',
+      'coupons.view', 'coupons.manage',
+      'shipping.view', 'shipping.manage',
+      'messages.view', 'messages.reply', 'messages.notes', 'messages.delete',
+      'content.view', 'content.manage',
+      'settings.view', 'settings.manage',
+      'users.view',
+      'audit.view',
+    ],
+    recommendation: 'Para administradores generales y directores comerciales.',
+  },
+  {
+    id: 'ops',
+    name: 'Operaciones',
+    desc: 'Operación diaria de empaque, despacho, bodega y atención.',
+    badge: 'Logística diaria',
+    tone: 'green',
+    icon: 'box',
+    isSystem: true,
+    permissions: [
+      'dashboard.view',
+      'orders.view', 'orders.edit_status', 'orders.dispatch', 'orders.notes',
+      'customers.view',
+      'products.view',
+      'inventory.view', 'inventory.batches', 'inventory.adjust', 'inventory.movements',
+      'shipping.view',
+      'messages.view', 'messages.reply', 'messages.notes',
+    ],
+    recommendation: 'Para personal de taller, bodega y servicio al cliente.',
+  },
+  {
+    id: 'viewer',
+    name: 'Solo lectura',
+    desc: 'Acceso de solo lectura para reportes, estadísticas y supervisión.',
+    badge: 'Consulta',
+    tone: 'gray',
+    icon: 'eye',
+    isSystem: true,
+    permissions: [
+      'dashboard.view', 'dashboard.export',
+      'orders.view', 'orders.export',
+      'customers.view', 'customers.export',
+      'products.view',
+      'inventory.view',
+      'coupons.view',
+      'shipping.view',
+      'messages.view',
+      'content.view',
+      'settings.view',
+      'audit.view',
+    ],
+    recommendation: 'Para contadores, asesores externos o auditores.',
+  },
+];
+
+export function hasPermission(role: RoleDefinition | null | undefined, perm: string): boolean {
+  if (!role) return false;
+  if (role.id === 'owner' || role.permissions.includes('*')) return true;
+  return role.permissions.includes(perm);
+}
+
 export const AdminUserCreateSchema = z.object({
   email: z.string().trim().email().max(160),
   name: z.string().trim().min(2).max(120),
   password: z.string().min(8, 'Mínimo 8 caracteres'),
-  role: z.enum(ADMIN_ROLES).default('ops'),
+  role: z.string().trim().min(2).max(60).default('ops'),
 });
-export const AdminUserUpdateSchema = z.object({ name: z.string().trim().min(2).max(120).optional(), role: z.enum(ADMIN_ROLES).optional(), active: z.boolean().optional(), password: z.string().min(8).optional() });
+export const AdminUserUpdateSchema = z.object({
+  name: z.string().trim().min(2).max(120).optional(),
+  role: z.string().trim().min(2).max(60).optional(),
+  active: z.boolean().optional(),
+  password: z.string().min(8).optional(),
+});
 
 export const OrderAdminUpdateSchema = OrderUpdateSchema.extend({ adminNotes: z.string().max(2000).optional() });
 

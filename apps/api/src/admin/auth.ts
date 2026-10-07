@@ -10,7 +10,7 @@ import { adminUsers } from '../db/schema';
 import { loadConfig } from '../config/config';
 
 export interface AdminIdentity { id: number; email: string; name: string; role: AdminRole }
-const RANK: Record<AdminRole, number> = { viewer: 0, ops: 1, admin: 2, owner: 3 };
+const RANK: Record<string, number> = { viewer: 0, ops: 1, admin: 2, owner: 3 };
 
 /** Hash de contraseñas con scrypt (sin dependencias nativas). Formato: salt:hash. */
 export const hashPassword = (pw: string) => { const salt = randomBytes(16).toString('hex'); return `${salt}:${scryptSync(pw, salt, 64).toString('hex')}`; };
@@ -61,7 +61,11 @@ export class AdminGuard implements CanActivate {
     req.user = { id: p.sub, email: p.email, name: p.name, role: p.role };
     // Lectura para todos; escritura según rol mínimo (ops por defecto).
     const min = this.reflector.getAllAndOverride<AdminRole | undefined>(ROLES_KEY, [ctx.getHandler(), ctx.getClass()]) ?? (req.method === 'GET' ? 'viewer' : 'ops');
-    if (RANK[p.role] < RANK[min]) throw new ForbiddenException('Tu rol no permite esta acción.');
+    if (p.role === 'owner') return true;
+    if (min === 'owner') throw new ForbiddenException('Esta acción está reservada exclusivamente para el Propietario.');
+    const userRank = RANK[p.role] ?? 1;
+    const minRank = RANK[min] ?? 1;
+    if (userRank < minRank) throw new ForbiddenException('Tu rol no permite esta acción.');
     return true;
   }
 }

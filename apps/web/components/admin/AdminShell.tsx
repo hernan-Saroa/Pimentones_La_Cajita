@@ -19,7 +19,18 @@ const DESKTOP_MQ = '(min-width: 1024px)';
 /** Permisos: owner > admin > ops > viewer (mismo orden que valida la API). */
 const RANK: Record<string, number> = { viewer: 0, ops: 1, admin: 2, owner: 3 };
 export const ROLE_LABEL: Record<string, string> = { owner: 'Propietario', admin: 'Administrador', ops: 'Operaciones', viewer: 'Solo lectura' };
-export function useCan() { const me = useMe(); return (min: 'viewer' | 'ops' | 'admin' | 'owner') => (RANK[me?.role ?? 'viewer'] ?? 0) >= RANK[min]; }
+export function useCan() {
+  const me = useMe();
+  return (minOrPerm: 'viewer' | 'ops' | 'admin' | 'owner' | string) => {
+    if (!me) return false;
+    if (me.role === 'owner') return true;
+    if (minOrPerm === 'owner') return false;
+    if (minOrPerm === 'admin') return me.role === 'admin';
+    if (minOrPerm === 'ops') return me.role === 'admin' || me.role === 'ops' || (me.role !== 'viewer');
+    if (minOrPerm === 'viewer') return true;
+    return true;
+  };
+}
 
 /** Contadores que alimentan la barra lateral, la campana y el tablero. */
 type Counts = { pendingConfirmation: number; toShip: number; unread: number; lowStock: number };

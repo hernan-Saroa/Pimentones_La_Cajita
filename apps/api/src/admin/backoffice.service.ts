@@ -1,16 +1,16 @@
 import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { and, asc, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
-import type { CouponUpsert } from '@lacajita/shared';
-import { ADMIN_ROLES } from '@lacajita/shared';
+import type { CouponUpsert, RoleDefinition } from '@lacajita/shared';
+import { ADMIN_ROLES, DEFAULT_SYSTEM_ROLES } from '@lacajita/shared';
 import { DB, type Db } from '../db/db.module';
-import { adminUsers, batches, coupons, orders, products, shippingZones, stockMovements, subscribers } from '../db/schema';
+import { adminUsers, batches, content, coupons, orders, products, shippingZones, stockMovements, subscribers } from '../db/schema';
 import { hashPassword } from './auth';
 
 const PAID = ['paid', 'preparing', 'shipped', 'delivered'];
 type ZoneUpsert = { department: string; rate: number; daysMin: number; daysMax: number; codAvailable: boolean; active: boolean };
 type BatchCreate = { productId: number; code: string; quantity: number; producedAt: string; expiresAt: string | null; note: string };
-type UserCreate = { email: string; name: string; password: string; role: (typeof ADMIN_ROLES)[number] };
-type UserUpdate = { name?: string; role?: (typeof ADMIN_ROLES)[number]; active?: boolean; password?: string };
+type UserCreate = { email: string; name: string; password: string; role: string };
+type UserUpdate = { name?: string; role?: string; active?: boolean; password?: string };
 
 /** Funciones del backoffice que no son pedidos ni productos: clientes, cupones, zonas, inventario, contenido, usuarios. */
 @Injectable()
@@ -102,6 +102,162 @@ export class BackofficeService {
     return r;
   }
 
+  // ---- Roles y Permisos Granulares ----
+  async getRoles(): Promise<RoleDefinition[]> {
+    const users = await this.db.select({ role: adminUsers.role, active: adminUsers.active }).from(adminUsers);
+    const countByRole: Record<string, number> = {};
+    for (const u of users) {
+      if (u.active) {
+        countByRole[u.role] = (countByRole[u.role] || 0) + 1;
+      }
+    }
+
+    const [c] = await this.db.select().from(content).where(eq(content.key, 'admin_custom_roles'));
+    let customRoles: RoleDefinition[] = [];
+    if (c && c.value) {
+      try {
+        const parsed = JSON.parse(c.value);
+        if (Array.isArray(parsed)) customRoles = parsed;
+      } catch {
+        customRoles = [];
+      }
+    }
+
+    const all: RoleDefinition[] = JSON.parse(JSON.stringify(DEFAULT_SYSTEM_ROLES));
+    for (const cr of customRoles) {
+      const idx = all.findIndex((r) => r.id === cr.id);
+      if (idx >= 0) {
+        if (all[idx].id !== 'owner') {
+          all[idx] = { ...all[idx], ...cr, isSystem: all[idx].isSystem };
+        }
+      } else {
+        all.push({ ...cr, isSystem: false });
+      }
+    }
+
+    return all.map((r) => ({
+      ...r,
+      userCount: countByRole[r.id] ?? 0,
+    })) as any;
+  }
+
+  async createRole(data: any): Promise<RoleDefinition> {
+    const roleId = data.id.trim().toLowerCase();
+    const existing = await this.getRoles();
+    if (existing.some((r) => r.id === roleId)) {
+      throw new ConflictException(`Ya existe un rol con el identificador "${roleId}".`);
+    }
+
+    const newRole: RoleDefinition = {
+      id: roleId,
+      name: data.name.trim(),
+      desc: data.desc?.trim() || '',
+      badge: data.badge?.trim() || 'Personalizado',
+      tone: data.tone || 'blue',
+      icon: data.icon || 'shield',
+      isSystem: false,
+      permissions: Array.isArray(data.permissions) ? data.permissions : [],
+      recommendation: data.recommendation?.trim() || '',
+    };
+
+    const [c] = await this.db.select().from(content).where(eq(content.key, 'admin_custom_roles'));
+    let customList: RoleDefinition[] = [];
+    if (c && c.value) {
+      try { customList = JSON.parse(c.value); } catch { customList = []; }
+    }
+    customList.push(newRole);
+
+    await this.db.insert(content).values({
+      key: 'admin_custom_roles',
+      value: JSON.stringify(customList),
+      updatedAt: new Date(),
+    }).onConflictDoUpdate({
+      target: content.key,
+      set: { value: JSON.stringify(customList), updatedAt: new Date() },
+    });
+
+    return newRole;
+  }
+
+  async updateRole(id: string, patch: any): Promise<RoleDefinition> {
+    const roleId = id.trim().toLowerCase();
+    const [c] = await this.db.select().from(content).where(eq(content.key, 'admin_custom_roles'));
+    let customList: RoleDefinition[] = [];
+    if (c && c.value) {
+      try { customList = JSON.parse(c.value); } catch { customList = []; }
+    }
+
+    const isSystemRole = DEFAULT_SYSTEM_ROLES.some((r) => r.id === roleId);
+    if (roleId === 'owner') {
+      throw new ConflictException('Los permisos del rol Propietario son totales y no pueden ser modificados.');
+    }
+
+    let updated: RoleDefinition;
+    const existingCustomIdx = customList.findIndex((r) => r.id === roleId);
+
+    if (existingCustomIdx >= 0) {
+      updated = {
+        ...customList[existingCustomIdx],
+        ...patch,
+        id: roleId,
+        isSystem: false,
+      };
+      customList[existingCustomIdx] = updated;
+    } else if (isSystemRole) {
+      const base = DEFAULT_SYSTEM_ROLES.find((r) => r.id === roleId)!;
+      updated = {
+        ...base,
+        ...patch,
+        id: roleId,
+        isSystem: true,
+      };
+      customList.push(updated);
+    } else {
+      throw new NotFoundException(`El rol "${roleId}" no fue encontrado.`);
+    }
+
+    await this.db.insert(content).values({
+      key: 'admin_custom_roles',
+      value: JSON.stringify(customList),
+      updatedAt: new Date(),
+    }).onConflictDoUpdate({
+      target: content.key,
+      set: { value: JSON.stringify(customList), updatedAt: new Date() },
+    });
+
+    return updated;
+  }
+
+  async deleteRole(id: string): Promise<{ ok: boolean }> {
+    const roleId = id.trim().toLowerCase();
+    if (DEFAULT_SYSTEM_ROLES.some((r) => r.id === roleId)) {
+      throw new ConflictException('No es posible eliminar un rol predeterminado del sistema.');
+    }
+
+    const usersWithRole = await this.db.select({ id: adminUsers.id, name: adminUsers.name }).from(adminUsers).where(eq(adminUsers.role, roleId));
+    if (usersWithRole.length > 0) {
+      throw new ConflictException(`No puedes eliminar este rol porque está asignado a ${usersWithRole.length} persona(s) (${usersWithRole.map((u) => u.name).join(', ')}). Reasígnalos primero a otro rol.`);
+    }
+
+    const [c] = await this.db.select().from(content).where(eq(content.key, 'admin_custom_roles'));
+    let customList: RoleDefinition[] = [];
+    if (c && c.value) {
+      try { customList = JSON.parse(c.value); } catch { customList = []; }
+    }
+
+    const filtered = customList.filter((r) => r.id !== roleId);
+    await this.db.insert(content).values({
+      key: 'admin_custom_roles',
+      value: JSON.stringify(filtered),
+      updatedAt: new Date(),
+    }).onConflictDoUpdate({
+      target: content.key,
+      set: { value: JSON.stringify(filtered), updatedAt: new Date() },
+    });
+
+    return { ok: true };
+  }
+
   // ---- Exportaciones ----
   async ordersCsv(from?: string, to?: string) {
     const conds = []; if (from) conds.push(gte(orders.createdAt, new Date(from))); if (to) conds.push(lte(orders.createdAt, new Date(to)));
@@ -112,7 +268,13 @@ export class BackofficeService {
   }
   async subscribersCsv() {
     const rows = await this.db.select().from(subscribers).orderBy(desc(subscribers.createdAt));
-    return '\uFEFFcorreo;fecha\n' + rows.map((r) => `${r.email};${r.createdAt.toISOString()}`).join('\n');
+    return '\uFEFFcorreo;autorizado_habeas_data;fecha_autorizacion;estado_envio;fecha_registro\n' + rows.map((r) => [
+      r.email,
+      r.consent ? 'SI' : 'NO',
+      r.consentAt ? r.consentAt.toISOString() : r.createdAt.toISOString(),
+      r.status || 'active',
+      r.createdAt.toISOString(),
+    ].join(';')).join('\n');
   }
   async customersCsv() {
     const rows = await this.customers();

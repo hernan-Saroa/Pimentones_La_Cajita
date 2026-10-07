@@ -135,7 +135,7 @@ export const adminUsers = pgTable('admin_users', {
   email: varchar('email', { length: 160 }).notNull().unique(),
   name: varchar('name', { length: 120 }).notNull(),
   passwordHash: varchar('password_hash', { length: 200 }).notNull(),
-  role: varchar('role', { length: 20 }).notNull().default('ops'),
+  role: varchar('role', { length: 60 }).notNull().default('ops'),
   active: boolean('active').notNull().default(true),
   lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

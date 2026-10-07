@@ -238,6 +238,19 @@ export const adminApi = (token: string) => {
       invalidateCache(/admin:(users|audit)/);
       return request(`/admin/users/${id}`, any, { method: 'PATCH', body: JSON.stringify(u), headers: auth });
     },
+    roles: (force = false) => cachedRequest('admin:roles', 60_000, () => request('/admin/roles', z.array(any), { headers: auth }), force),
+    createRole: async (r: object) => {
+      invalidateCache(/admin:(roles|users|audit)/);
+      return request('/admin/roles', any, { method: 'POST', body: JSON.stringify(r), headers: auth });
+    },
+    updateRole: async (id: string, r: object) => {
+      invalidateCache(/admin:(roles|users|audit)/);
+      return request(`/admin/roles/${encodeURIComponent(id)}`, any, { method: 'PUT', body: JSON.stringify(r), headers: auth });
+    },
+    deleteRole: async (id: string) => {
+      invalidateCache(/admin:(roles|users|audit)/);
+      return request(`/admin/roles/${encodeURIComponent(id)}`, any, { method: 'DELETE', headers: auth });
+    },
     audit: (force = false) => cachedRequest('admin:audit', 30_000, () => request('/admin/audit?limit=200', z.array(any), { headers: auth }), force),
     /** Descarga un CSV protegido (el token va en el encabezado, así que no sirve un enlace directo). */
     download: async (path: string, filename: string) => {
