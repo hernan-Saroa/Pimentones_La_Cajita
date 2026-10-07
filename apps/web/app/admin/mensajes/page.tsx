@@ -1,2 +1,4 @@
+import { Suspense } from 'react';
 import { Messages } from '@/components/admin/Messages';
-export default function Page() { return <Messages />; }
+import { PageSkeleton } from '@/components/admin/kit';
+export default function Page() { return <Suspense fallback={<PageSkeleton />}><Messages /></Suspense>; }

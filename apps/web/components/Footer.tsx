@@ -8,51 +8,47 @@ import { BackToTop } from './BackToTop';
  * Conectado con los datos reales del negocio desde NestJS (Admin → Ajustes).
  */
 export async function Footer() {
-  const store = await api.store().catch(() => null);
+  const [store, content] = await Promise.all([
+    api.store().catch(() => null),
+    api.content().catch(() => null),
+  ]);
   const c = store?.contact;
   const whatsappNum = store?.whatsapp || '573103347621';
   const cleanWa = whatsappNum.replace(/\D/g, '');
   const waUrl = `https://wa.me/${cleanWa}?text=Hola%20equipo%20de%20La%20Cajita,%20tengo%20una%20pregunta`;
   const freeShipping = store?.shipping?.freeFrom ? cop(store.shipping.freeFrom) : '$90.000';
 
+  const showRibbon = content?.footerRibbonEnabled ?? true;
+  const pillars = (content?.footerPillars || [
+    { id: 'fp-1', icon: '🌶️', title: 'Cosecha Seleccionada', desc: 'Pimentones maduros asados y confitados a fuego lento en Bogotá.', active: true },
+    { id: 'fp-2', icon: '🌿', title: '100% Libre de Químicos', desc: 'Sin conservantes artificiales, espesantes ni colorantes añadidos.', active: true },
+    { id: 'fp-3', icon: '📦', title: 'Envíos a Toda Colombia', desc: `Embalaje antigolpes con sello térmico. Gratis desde ${freeShipping}.`, active: true },
+    { id: 'fp-4', icon: '🔒', title: 'Compra Segura & PSE', desc: 'Transacciones cifradas con Wompi, Bancolombia, Nequi y tarjetas.', active: true },
+  ]).filter((p: any) => p.active !== false);
+
+  const manifesto = content?.footerManifesto || 'Conservas de pimentón de autor elaboradas a mano en tandas cortas. Honramos el tiempo de la cocina tradicional para transformar momentos sencillos en banquetes memorables.';
+  const originBadge = content?.footerOriginBadge || 'Hecho con orgullo y fogón en Bogotá, Colombia';
+  const showWorkshop = content?.footerWorkshopActive ?? true;
+  const workshopStatus = content?.footerWorkshopStatus || 'Taller activo · Despachando hoy';
+
   return (
     <footer className="footer-worldclass">
       {/* 1. Ribbon Superior: Pilares de Confianza y Garantía Artesanal */}
-      <div className="footer-ribbon">
-        <div className="footer-ribbon-grid">
-          <div className="f-pill-card">
-            <span className="f-pill-icon" aria-hidden="true">🌶️</span>
-            <div className="f-pill-text">
-              <h4>Cosecha Seleccionada</h4>
-              <p>Pimentones maduros asados y confitados a fuego lento en Bogotá.</p>
-            </div>
-          </div>
-
-          <div className="f-pill-card">
-            <span className="f-pill-icon" aria-hidden="true">🌿</span>
-            <div className="f-pill-text">
-              <h4>100% Libre de Químicos</h4>
-              <p>Sin conservantes artificiales, espesantes ni colorantes añadidos.</p>
-            </div>
-          </div>
-
-          <div className="f-pill-card">
-            <span className="f-pill-icon" aria-hidden="true">📦</span>
-            <div className="f-pill-text">
-              <h4>Envíos a Toda Colombia</h4>
-              <p>Embalaje antigolpes con sello térmico. Gratis desde {freeShipping}.</p>
-            </div>
-          </div>
-
-          <div className="f-pill-card">
-            <span className="f-pill-icon" aria-hidden="true">🔒</span>
-            <div className="f-pill-text">
-              <h4>Compra Segura & PSE</h4>
-              <p>Transacciones cifradas con Wompi, Bancolombia, Nequi y tarjetas.</p>
-            </div>
+      {showRibbon && pillars.length > 0 && (
+        <div className="footer-ribbon">
+          <div className="footer-ribbon-grid">
+            {pillars.map((pill: any) => (
+              <div className="f-pill-card" key={pill.id || pill.title}>
+                <span className="f-pill-icon" aria-hidden="true">{pill.icon}</span>
+                <div className="f-pill-text">
+                  <h4>{pill.title}</h4>
+                  <p>{pill.desc}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
+      )}
 
       {/* 2. Cuerpo Principal del Pie de Página */}
       <div className="footer-body">
@@ -64,14 +60,15 @@ export async function Footer() {
             </div>
 
             <p className="f-brand-manifesto">
-              Conservas de pimentón de autor elaboradas a mano en tandas cortas.
-              Honramos el tiempo de la cocina tradicional para transformar momentos sencillos en banquetes memorables.
+              {manifesto}
             </p>
 
-            <div className="f-colombia-badge">
-              <span className="f-flag" aria-hidden="true">🇨🇴</span>
-              <span>Hecho con orgullo y fogón en Bogotá, Colombia</span>
-            </div>
+            {originBadge && (
+              <div className="f-colombia-badge">
+                <span className="f-flag" aria-hidden="true">🇨🇴</span>
+                <span>{originBadge}</span>
+              </div>
+            )}
 
             {/* Redes y comunidad */}
             <div className="f-social-list" aria-label="Canales oficiales">
@@ -131,8 +128,6 @@ export async function Footer() {
             <ul className="f-link-list">
               <li><Link href="/#maridajes">Guía de Maridajes</Link></li>
               <li><Link href="/#historia">Historia & Filosofía</Link></li>
-              <li><Link href="/#proceso">De la Huerta a la Mesa</Link></li>
-              <li><Link href="/#as-in">Sommelier Virtual</Link></li>
               <li><Link href="/#faq-h">Preguntas Frecuentes</Link></li>
             </ul>
           </nav>
@@ -153,10 +148,12 @@ export async function Footer() {
           <div className="f-col f-col-taller">
             <h3 className="f-col-title">Taller en Bogotá</h3>
 
-            <div className="f-status-pill">
-              <span className="f-status-dot" aria-hidden="true" />
-              <span>Taller activo · Despachando hoy</span>
-            </div>
+            {showWorkshop && (
+              <div className="f-status-pill">
+                <span className="f-status-dot" aria-hidden="true" />
+                <span>{workshopStatus}</span>
+              </div>
+            )}
 
             <div className="f-contact-items">
               <a href={waUrl} target="_blank" rel="noreferrer" className="f-contact-line">

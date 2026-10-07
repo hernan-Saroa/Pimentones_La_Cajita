@@ -9,11 +9,17 @@ interface BrandManifestoProps {
   text: string;
   tagline: string;
   videoUrl: string;
+  kicker?: string;
+  values?: string[];
 }
 
-export function BrandManifesto({ mission, text, videoUrl }: BrandManifestoProps) {
+export function BrandManifesto({ mission, title, text, videoUrl, kicker, values }: BrandManifestoProps) {
   const [isPlaying, setIsPlaying] = useState(false);
-  const videoId = videoUrl.match(/embed\/([\w-]+)|v=([\w-]+)|youtu\.be\/([\w-]+)/)?.slice(1).find(Boolean) || 'nKZEfpe_bng';
+  const videoId = videoUrl?.match(/embed\/([\w-]+)|v=([\w-]+)|youtu\.be\/([\w-]+)|shorts\/([\w-]+)/)?.slice(1).find(Boolean) || 'nKZEfpe_bng';
+
+  const titleParts = (title || '').split('.');
+  const primaryTitle = titleParts.length > 1 ? titleParts[0] + '.' : (title || 'Pimentón de verdad.');
+  const accentTitle = titleParts.length > 1 ? titleParts.slice(1).join('.').trim() : '';
 
   return (
     <section id="historia" className="manifesto-section" aria-labelledby="manifesto-title">
@@ -22,12 +28,12 @@ export function BrandManifesto({ mission, text, videoUrl }: BrandManifestoProps)
         <div className="manifesto-copy">
           <div className="manifesto-kicker">
             <Sparkle width={14} height={14} />
-            <span>El Alma de Nuestro Fogón</span>
+            <span>{kicker || 'El Alma de Nuestro Fogón'}</span>
           </div>
 
           <h2 id="manifesto-title" className="manifesto-heading">
-            Pimentón de verdad. <br />
-            <span>Sin atajos ni conservantes.</span>
+            {primaryTitle} {accentTitle && <br />}
+            {accentTitle ? <span>{accentTitle}</span> : null}
           </h2>
 
           <div className="manifesto-quote-card">
@@ -129,6 +135,7 @@ export function BrandManifesto({ mission, text, videoUrl }: BrandManifestoProps)
             </div>
           </div>
         </div>
+
       </div>
     </section>
   );

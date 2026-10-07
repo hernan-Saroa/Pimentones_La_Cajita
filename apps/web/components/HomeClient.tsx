@@ -15,17 +15,32 @@ export function GiftButton({ products }: { products: Product[] }) {
   );
 }
 
-export function Newsletter() {
+interface NewsletterProps {
+  kicker?: string;
+  title?: string;
+  subtitle?: string;
+  note?: string;
+  consentText?: string;
+}
+
+export function Newsletter({
+  kicker = '✦ Club Privado del Fogón',
+  title = 'Únete a La Cajita',
+  subtitle = 'Tandas recién salidas del fogón, recetas de autor y beneficios exclusivos antes que nadie.',
+  note = 'Sin spam · Solo cocina honesta y avisos de tandas frescas',
+  consentText = 'Autorizo el tratamiento de mis datos personales según la Política de Privacidad (Ley 1581 de 2012).',
+}: NewsletterProps = {}) {
   const [email, setEmail] = useState('');
+  const [consent, setConsent] = useState(true);
   const [state, setState] = useState<'idle' | 'busy' | 'done'>('idle');
   const [msg, setMsg] = useState('');
   return (
     <section className="news" aria-labelledby="news-h">
       <div className="news-copy">
-        <span className="news-badge">✦ Club Privado del Fogón</span>
-        <h2 id="news-h">Únete a La Cajita</h2>
-        <p>Tandas recién salidas del fogón, recetas de autor y beneficios exclusivos antes que nadie.</p>
-        <span className="news-note">Sin spam · Solo cocina honesta y avisos de tandas frescas</span>
+        <span className="news-badge">{kicker}</span>
+        <h2 id="news-h">{title}</h2>
+        <p>{subtitle}</p>
+        <span className="news-note">{note}</span>
       </div>
       {state === 'done' ? (
         <div className="news-done-wrap">
@@ -35,8 +50,20 @@ export function Newsletter() {
         <form
           className="news-form"
           onSubmit={async (e) => {
-            e.preventDefault(); setState('busy'); setMsg('');
-            try { await api.subscribe(email); setState('done'); } catch (err) { setMsg((err as Error).message); setState('idle'); }
+            e.preventDefault();
+            if (!consent) {
+              setMsg('Debes autorizar el tratamiento de datos personales para unirte.');
+              return;
+            }
+            setState('busy');
+            setMsg('');
+            try {
+              await api.subscribe(email, consent);
+              setState('done');
+            } catch (err) {
+              setMsg((err as Error).message);
+              setState('idle');
+            }
           }}
         >
           <label className="sr-only" htmlFor="news-email">Correo electrónico</label>
@@ -54,6 +81,15 @@ export function Newsletter() {
               {state === 'busy' ? 'Enviando…' : 'Suscribirme'}
             </button>
           </div>
+          <label className="news-consent-wrap">
+            <input
+              type="checkbox"
+              checked={consent}
+              onChange={(e) => setConsent(e.target.checked)}
+              className="news-consent-checkbox"
+            />
+            <span className="news-consent-text">{consentText}</span>
+          </label>
           {msg && <p className="news-err" role="alert">{msg}</p>}
         </form>
       )}

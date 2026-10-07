@@ -10,6 +10,7 @@ export const products = pgTable('products', {
   tagline: varchar('tagline', { length: 200 }),
   description: text('description').notNull(),
   pairing: varchar('pairing', { length: 300 }),
+  conservation: text('conservation'),
   price: integer('price').notNull(),           // COP sin decimales
   sizeG: integer('size_g').notNull().default(200),
   stock: integer('stock').notNull().default(0),
@@ -65,6 +66,9 @@ export const settings = pgTable('settings', {
 export const subscribers = pgTable('subscribers', {
   id: serial('id').primaryKey(),
   email: varchar('email', { length: 160 }).notNull().unique(),
+  consent: boolean('consent').notNull().default(true),
+  consentAt: timestamp('consent_at', { withTimezone: true }).defaultNow(),
+  status: varchar('status', { length: 30 }).notNull().default('active'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -176,4 +180,15 @@ export const messages = pgTable('messages', {
   message: text('message').notNull(),
   status: varchar('status', { length: 20 }).notNull().default('new'),   // new | read | answered
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-}, (t) => [index('messages_status_idx').on(t.status)]);
+}, (t) => [index('messages_status_idx').on(t.status), index('messages_email_idx').on(t.email)]);
+
+/** Historial de cada conversación de la bandeja: respuestas enviadas, notas internas del equipo y cambios de estado. */
+export const messageEvents = pgTable('message_events', {
+  id: serial('id').primaryKey(),
+  messageId: integer('message_id').notNull().references(() => messages.id, { onDelete: 'cascade' }),
+  kind: varchar('kind', { length: 20 }).notNull(),          // reply | note | status
+  channel: varchar('channel', { length: 20 }),               // email | whatsapp (solo respuestas)
+  body: text('body'),
+  author: varchar('author', { length: 160 }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index('message_events_message_idx').on(t.messageId)]);

@@ -1,5 +1,19 @@
-export function ArtisanProcess() {
-  const steps = [
+import type { ProcessStep } from '@lacajita/shared';
+
+interface ArtisanProcessProps {
+  kicker?: string;
+  title?: string;
+  subtitle?: string;
+  steps?: ProcessStep[];
+}
+
+export function ArtisanProcess({
+  kicker = 'El Oficio Detrás del Frasco',
+  title = 'De la huerta a tu mesa: Sin atajos ni conservantes',
+  subtitle = 'En un mundo lleno de salsas industriales con químicos impronunciables, cocinamos como en casa: con fuego lento, mortero y amor por los ingredientes reales.',
+  steps,
+}: ArtisanProcessProps = {}) {
+  const defaultSteps: ProcessStep[] = [
     {
       num: '01',
       title: 'Huerta y Cosecha a Mano',
@@ -30,19 +44,18 @@ export function ArtisanProcess() {
     },
   ];
 
+  const activeSteps = steps && steps.length > 0 ? steps : defaultSteps;
+
   return (
     <section id="proceso" className="process-section" aria-labelledby="proc-h">
       <div className="process-header">
-        <span className="kicker-pill">El Oficio Detrás del Frasco</span>
-        <h2 id="proc-h">De la huerta a tu mesa: Sin atajos ni conservantes</h2>
-        <p className="process-lead">
-          En un mundo lleno de salsas industriales con químicos impronunciables, cocinamos como en casa:
-          con fuego lento, mortero y amor por los ingredientes reales.
-        </p>
+        <span className="kicker-pill">{kicker}</span>
+        <h2 id="proc-h">{title}</h2>
+        <p className="process-lead">{subtitle}</p>
       </div>
 
       <div className="process-grid">
-        {steps.map((st) => (
+        {activeSteps.map((st) => (
           <div key={st.num} className="process-card">
             <div className="process-card-top">
               <span className="process-num">{st.num}</span>

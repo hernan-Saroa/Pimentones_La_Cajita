@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { cop, type Product } from '@lacajita/shared';
 import { heroTheme, sensory } from '@/lib/tints';
 import { useTilt } from '@/lib/motion';
@@ -10,23 +10,47 @@ import { Arrow, Star, Sparkle, Fire } from './icons';
 const INTERVAL = 6000;
 
 /** Portada sensorial interactiva con notas de cata flotantes, halos de luz y selector de sabores. */
-export function FlavorHero({ products, brand = 'Pimentón de verdad. Sin atajos.' }: { products: Product[]; brand?: string }) {
+export function FlavorHero({
+  products,
+  brand = 'Pimentón de verdad. Sin atajos.',
+  badge = 'Bogotá D.C. · Lotes Cortos Hechos a Mano',
+  ratingText = '4.9 (1.200+ mesas)',
+  cta = 'Ver notas de cata',
+  productSlugs,
+}: {
+  products: Product[];
+  brand?: string;
+  badge?: string;
+  ratingText?: string;
+  cta?: string;
+  productSlugs?: string[];
+}) {
+  const displayProducts = useMemo(() => {
+    if (productSlugs && productSlugs.length > 0) {
+      const filtered = productSlugs
+        .map((slug) => products.find((p) => p.slug === slug))
+        .filter((p): p is Product => Boolean(p && p.stock >= 0));
+      if (filtered.length > 0) return filtered;
+    }
+    return products;
+  }, [products, productSlugs]);
+
   const [i, setI] = useState(0);
   const [auto, setAuto] = useState(true);
   const tilt = useTilt(12);
   const touch = useRef(0);
-  const p = products[i];
+  const p = displayProducts[i] || displayProducts[0];
 
   useEffect(() => {
-    if (!auto || products.length < 2 || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-    const t = setTimeout(() => setI((x) => (x + 1) % products.length), INTERVAL);
+    if (!auto || displayProducts.length < 2 || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    const t = setTimeout(() => setI((x) => (x + 1) % displayProducts.length), INTERVAL);
     return () => clearTimeout(t);
-  }, [i, auto, products.length]);
+  }, [i, auto, displayProducts.length]);
 
   const pick = (n: number) => { setAuto(false); setI(n); };
   const onTouchEnd = (e: React.TouchEvent) => {
     const dx = e.changedTouches[0].clientX - touch.current;
-    if (Math.abs(dx) >= 40) pick((i + (dx < 0 ? 1 : products.length - 1)) % products.length);
+    if (Math.abs(dx) >= 40) pick((i + (dx < 0 ? 1 : displayProducts.length - 1)) % displayProducts.length);
   };
 
   const [bg, fg] = p ? heroTheme(p.slug) : ['#efe2c8', '#1a1714'];
@@ -46,10 +70,12 @@ export function FlavorHero({ products, brand = 'Pimentón de verdad. Sin atajos.
       <div className="fhero-inner">
         <div className="fhero-copy">
           {/* Badge artesanal */}
-          <div className="fhero-meta-pill">
-            <span className="pill-dot" />
-            <span>Bogotá D.C. · Lotes Cortos Hechos a Mano</span>
-          </div>
+          {badge && (
+            <div className="fhero-meta-pill">
+              <span className="pill-dot" />
+              <span>{badge}</span>
+            </div>
+          )}
 
           <h1 className="fhero-brand">{brand}</h1>
 
@@ -57,11 +83,11 @@ export function FlavorHero({ products, brand = 'Pimentón de verdad. Sin atajos.
             <div key={p.slug} className="fhero-swap" aria-live="polite">
               <div className="fhero-header-row">
                 {p.kicker && <span className="fhero-kicker">{p.kicker}</span>}
-                <div className="fhero-rating" aria-label="Calificación 4.9 de 5 estrellas">
+                <div className="fhero-rating" aria-label={`Calificación ${ratingText}`}>
                   <div className="stars">
                     <Star /><Star /><Star /><Star /><Star />
                   </div>
-                  <span>4.9 (1.200+ mesas)</span>
+                  <span>{ratingText}</span>
                 </div>
               </div>
 
@@ -84,7 +110,7 @@ export function FlavorHero({ products, brand = 'Pimentón de verdad. Sin atajos.
                 <div className="fhero-cta-group">
                   <QtyButton p={p} size="btn-lg" variant="light" />
                   <Link href={`/producto/${p.slug}`} className="fhero-more">
-                    Ver notas de cata <Arrow width={16} height={16} />
+                    {cta} <Arrow width={16} height={16} />
                   </Link>
                 </div>
               </div>
@@ -138,7 +164,7 @@ export function FlavorHero({ products, brand = 'Pimentón de verdad. Sin atajos.
 
       {/* Selector de sabores / pestañas */}
       <div className="fhero-picker" role="tablist" aria-label="Elegir sabor">
-        {products.map((x, n) => {
+        {displayProducts.map((x, n) => {
           const xs = sensory(x.slug);
           return (
             <button
@@ -148,8 +174,8 @@ export function FlavorHero({ products, brand = 'Pimentón de verdad. Sin atajos.
               className={`fhero-tab ${n === i ? 'on' : ''}`}
               onClick={() => pick(n)}
               onKeyDown={(e) => {
-                if (e.key === 'ArrowRight') pick((n + 1) % products.length);
-                if (e.key === 'ArrowLeft') pick((n - 1 + products.length) % products.length);
+                if (e.key === 'ArrowRight') pick((n + 1) % displayProducts.length);
+                if (e.key === 'ArrowLeft') pick((n - 1 + displayProducts.length) % displayProducts.length);
               }}
             >
               <div className="tab-thumb">

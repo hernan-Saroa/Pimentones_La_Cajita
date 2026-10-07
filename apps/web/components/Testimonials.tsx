@@ -1,7 +1,12 @@
+import type { Testimonial } from '@lacajita/shared';
 import { Star, Check } from './icons';
 
-export function Testimonials() {
-  const reviews = [
+interface TestimonialsProps {
+  reviews?: Testimonial[];
+}
+
+export function Testimonials({ reviews }: TestimonialsProps) {
+  const list = reviews && reviews.length > 0 ? reviews : [
     {
       name: 'Camila Restrepo',
       city: 'Bogotá D.C.',
@@ -42,7 +47,7 @@ export function Testimonials() {
       </div>
 
       <div className="testimonials-grid">
-        {reviews.map((rev, i) => (
+        {list.map((rev, i) => (
           <div key={i} className="test-card">
             <div className="test-stars">
               {Array.from({ length: rev.stars }).map((_, si) => (

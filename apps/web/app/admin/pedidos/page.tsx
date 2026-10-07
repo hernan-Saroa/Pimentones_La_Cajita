@@ -1,3 +1,4 @@
 import { Suspense } from 'react';
 import { Orders } from '@/components/admin/Orders';
-export default function Page() { return <Suspense fallback={<p className="muted">Cargando…</p>}><Orders /></Suspense>; }
+import { PageSkeleton } from '@/components/admin/kit';
+export default function Page() { return <Suspense fallback={<PageSkeleton />}><Orders /></Suspense>; }

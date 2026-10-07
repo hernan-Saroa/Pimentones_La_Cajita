@@ -1,88 +1,108 @@
 'use client';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import type { Product } from '@lacajita/shared';
+import type { Product, PairingItem } from '@lacajita/shared';
 import { cop } from '@lacajita/shared';
 import { QtyButton } from './QtyButton';
 import { Arrow, Sparkle } from './icons';
 
 interface PairingGuideProps {
   products: Product[];
+  kicker?: string;
+  title?: string;
+  subtitle?: string;
+  items?: PairingItem[];
 }
 
-export function PairingGuide({ products }: PairingGuideProps) {
-  const [activeTab, setActiveTab] = useState<'tabla' | 'burger' | 'asado' | 'desayuno'>('tabla');
+function getPairingIcon(text: string): string {
+  const t = text.toLowerCase();
+  if (t.includes('queso') || t.includes('tabla') || t.includes('vino')) return '🧀';
+  if (t.includes('hamburguesa') || t.includes('sandwich') || t.includes('sándwich')) return '🍔';
+  if (t.includes('carne') || t.includes('asado') || t.includes('brasa') || t.includes('parrilla')) return '🥩';
+  if (t.includes('arepa') || t.includes('desayuno') || t.includes('dulce') || t.includes('galleta')) return '🫓';
+  return '🌶️';
+}
 
-  const pairings = {
-    tabla: {
-      id: 'tabla',
-      title: 'La Tabla de Quesos & Vinos',
-      icon: '🧀',
-      dish: 'Queso Brie, Manchego, Jamón Serrano y Frutos Secos',
-      slug: 'pimentones-confitados',
-      tip: 'El dulzor salado y las tiras tiernas de los confitados cortan la grasa del queso y armonizan de forma inolvidable con una copa de vino.',
-      badge: 'El maridaje más elogiado',
-    },
-    burger: {
-      id: 'burger',
-      title: 'La Hamburguesa de Autor',
-      icon: '🍔',
-      dish: 'Carne madurada, pan brioche dorado y tocineta crocante',
-      slug: 'mayonesa-de-pimenton',
-      tip: 'Untada en ambas tapas del pan caliente: la textura de nube y el pimentón tostado al fuego elevan cualquier sándwich a nivel de restaurante.',
-      badge: 'La consentida de la casa',
-    },
-    asado: {
-      id: 'asado',
-      title: 'El Asado a la Brasa',
-      icon: '🥩',
-      dish: 'Punta de anca, costillas doradas, papas criollas y mazorcas',
-      slug: 'salsa-rustica-de-pimenton',
-      tip: 'Mortero artesanal y trocitos crujientes de nuez tostada que aportan profundidad y ahumado auténtico a los cortes al carbón.',
-      badge: 'Humo y nueces',
-    },
-    desayuno: {
-      id: 'desayuno',
-      title: 'El Desayuno con Arepa',
-      icon: '🫓',
-      dish: 'Arepa de maíz blanco, queso campesino derretido y huevos',
-      slug: 'mermelada-de-pimenton',
-      tip: 'El contraste agridulce sobre el queso caliente y salado es la sorpresa matutina que no sabías que necesitabas en tu mesa.',
-      badge: 'Agridulce perfecto',
-    },
-  };
+export function PairingGuide({
+  products,
+  kicker = 'Inspiración en la Cocina',
+  title = '¿Cómo disfrutar cada sabor en tu mesa?',
+  subtitle = 'Nuestras conservas no son solo aderezos: son el toque secreto para transformar platos cotidianos en momentos gourmet memorables.',
+  items,
+}: PairingGuideProps) {
+  const pairingItems = useMemo(() => {
+    if (items && Array.isArray(items) && items.length > 0) {
+      const activeList = items.filter((it) => it.active !== false);
+      if (activeList.length > 0) {
+        return activeList.map((it, idx) => {
+          const matchedProduct =
+            products.find((p) => p.slug === it.productSlug) ||
+            products.find((p) => String(p.id) === it.productSlug) ||
+            null;
+          const icon = it.icon || (matchedProduct ? getPairingIcon(`${matchedProduct.slug} ${matchedProduct.name} ${it.dish}`) : '🧀');
+          return {
+            id: it.id || `pair-${idx}`,
+            title: it.title || matchedProduct?.name || 'Maridaje recomendado',
+            icon,
+            dish: it.dish || matchedProduct?.pairing || 'Ideal para acompañar tus platos favoritos',
+            slug: matchedProduct?.slug || it.productSlug || '',
+            tip: it.tip || matchedProduct?.tagline || 'El toque artesanal que transforma cualquier preparación.',
+            badge: it.badge || matchedProduct?.kicker || 'Maridaje recomendado',
+            image: it.image || matchedProduct?.image || '',
+            product: matchedProduct,
+          };
+        });
+      }
+    }
 
-  const current = pairings[activeTab];
-  const matchedProduct = products.find((p) => p.slug === current.slug);
+    const list = products.filter((p) => p.pairing && p.pairing.trim().length > 0);
+    if (list.length === 0) return [];
+    return list.map((p) => {
+      const icon = getPairingIcon(`${p.slug} ${p.name} ${p.pairing}`);
+      const title = p.kicker ? `${p.kicker} · ${p.name}` : p.name;
+      return {
+        id: String(p.id),
+        title,
+        icon,
+        dish: p.pairing || 'Ideal para acompañar tus platos favoritos',
+        slug: p.slug,
+        tip: p.tagline || `El toque artesanal que transforma cualquier preparación con ${p.name}.`,
+        badge: p.kicker || 'Maridaje recomendado',
+        image: p.image || '',
+        product: p,
+      };
+    });
+  }, [products, items]);
+
+  const [activeId, setActiveId] = useState<string>('');
+
+  if (pairingItems.length === 0) return null;
+
+  const current = pairingItems.find((item) => item.id === (activeId || pairingItems[0].id)) || pairingItems[0];
+  const matchedProduct = current.product;
 
   return (
     <section id="maridajes" className="section pairing-guide" aria-labelledby="pair-title">
       <div className="pairing-header">
-        <span className="kicker-pill">Inspiración en la Cocina</span>
-        <h2 id="pair-title">¿Cómo disfrutar cada sabor en tu mesa?</h2>
-        <p className="pairing-lead">
-          Nuestras conservas no son solo aderezos: son el toque secreto para transformar platos cotidianos
-          en momentos gourmet memorables.
-        </p>
+        <span className="kicker-pill">{kicker}</span>
+        <h2 id="pair-title">{title}</h2>
+        <p className="pairing-lead">{subtitle}</p>
       </div>
 
-      {/* Selector de ocasión / plato */}
+      {/* Selector de ocasión / plato dinámico */}
       <div className="pairing-tabs" role="tablist">
-        {(Object.keys(pairings) as Array<keyof typeof pairings>).map((key) => {
-          const item = pairings[key];
-          return (
-            <button
-              key={item.id}
-              role="tab"
-              aria-selected={activeTab === key}
-              className={`pairing-tab ${activeTab === key ? 'active' : ''}`}
-              onClick={() => setActiveTab(key)}
-            >
-              <span className="tab-icon">{item.icon}</span>
-              <span className="tab-title">{item.title}</span>
-            </button>
-          );
-        })}
+        {pairingItems.map((item) => (
+          <button
+            key={item.id}
+            role="tab"
+            aria-selected={current.id === item.id}
+            className={`pairing-tab ${current.id === item.id ? 'active' : ''}`}
+            onClick={() => setActiveId(item.id)}
+          >
+            <span className="tab-icon">{item.icon}</span>
+            <span className="tab-title">{item.title}</span>
+          </button>
+        ))}
       </div>
 
       {/* Tarjeta de maridaje activo */}
@@ -93,7 +113,7 @@ export function PairingGuide({ products }: PairingGuideProps) {
             <span>{current.badge}</span>
           </div>
           <h3>{current.title}</h3>
-          <p className="pairing-dish"><b>Plato ideal:</b> {current.dish}</p>
+          <p className="pairing-dish"><b>Maridajes y preparaciones ideales:</b> {current.dish}</p>
           <p className="pairing-tip">“{current.tip}”</p>
 
           {matchedProduct && (
@@ -113,12 +133,12 @@ export function PairingGuide({ products }: PairingGuideProps) {
           )}
         </div>
 
-        {matchedProduct && (
+        {(current.image || matchedProduct?.image) && (
           <div className="pairing-media">
             <div className="pairing-jar-spotlight">
               <img
-                src={matchedProduct.image ?? ''}
-                alt={`Frasco de ${matchedProduct.name}`}
+                src={current.image || matchedProduct?.image || ''}
+                alt={`Frasco o receta de ${current.title}`}
                 className="spotlight-jar"
               />
               <div className="spotlight-aura" />

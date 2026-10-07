@@ -2,18 +2,17 @@ import { api, DEFAULT_STORE } from '@/lib/api';
 import { SiteContentSchema, type Product, type StoreInfo, type SiteContent } from '@lacajita/shared';
 import { cop } from '@lacajita/shared';
 import { FlavorHero } from '@/components/FlavorHero';
-import { Assistant } from '@/components/Assistant';
 import { BrandManifesto } from '@/components/BrandManifesto';
 import { ProductCard } from '@/components/ProductCard';
 import { BoxBuilder } from '@/components/BoxBuilder';
 import { PairingGuide } from '@/components/PairingGuide';
-import { ArtisanProcess } from '@/components/ArtisanProcess';
 import { Testimonials } from '@/components/Testimonials';
 import { Newsletter } from '@/components/HomeClient';
 import { Reveal } from '@/lib/motion';
 import { Leaf, Truck, Lock, Chevron } from '@/components/icons';
 
-export const revalidate = 60; // el catálogo se regenera en segundo plano cada minuto
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function Home() {
   const [products, store, c] = await Promise.all([
@@ -27,43 +26,46 @@ export default async function Home() {
   return (
     <>
       {/* 1. Hero sensorial con notas de cata y luz dinámica */}
-      <FlavorHero products={products} brand={c.heroBrand} />
+      <FlavorHero
+        products={products}
+        brand={c.heroBrand}
+        badge={c.heroBadge}
+        ratingText={c.heroRatingText}
+        cta={c.heroCta}
+        productSlugs={c.heroProductSlugs}
+      />
 
       {/* 2. Pilares de confianza estilo tarjeta premium */}
       <section className="trust-wrap" aria-label="Garantías de calidad">
         <ul className="trust" aria-label="Por qué comprar aquí">
-          <li className="trust-card">
-            <span className="trust-icon"><Leaf width={22} height={22} /></span>
-            <div className="trust-text">
-              <b>100% Sin Conservantes</b>
-              <span>Solo ingredientes reales que se entienden y cuidan tu salud.</span>
-            </div>
-          </li>
-          <li className="trust-card">
-            <span className="trust-icon"><Truck width={22} height={22} /></span>
-            <div className="trust-text">
-              <b>Despacho a Toda Colombia</b>
-              <span>{store.shipping.freeFrom > 0 ? `Envío gratis desde ${cop(store.shipping.freeFrom)}` : 'Envíos rápidos con guía de rastreo'}</span>
-            </div>
-          </li>
-          <li className="trust-card">
-            <span className="trust-icon"><Lock width={22} height={22} /></span>
-            <div className="trust-text">
-              <b>Pago Fácil & Protegido</b>
-              <span>Tarjeta, PSE, Nequi, Bancolombia o pago contraentrega.</span>
-            </div>
-          </li>
+          {(c.trustPillars || []).map((tp, idx) => (
+            <li key={idx} className="trust-card">
+              <span className="trust-icon">
+                {tp.icon === 'truck' ? <Truck width={22} height={22} /> : tp.icon === 'lock' ? <Lock width={22} height={22} /> : <Leaf width={22} height={22} />}
+              </span>
+              <div className="trust-text">
+                <b>{tp.title}</b>
+                <span>
+                  {tp.icon === 'truck' && store.shipping.freeFrom > 0
+                    ? `Envío gratis desde ${cop(store.shipping.freeFrom)}`
+                    : tp.desc}
+                </span>
+              </div>
+            </li>
+          ))}
         </ul>
       </section>
 
       {/* 3. Manifiesto Artesanal y Video Cinematográfico del Taller */}
       <Reveal>
         <BrandManifesto
+          kicker={c.manifestoKicker}
           mission={c.mission}
           title={c.aboutTitle}
           text={c.aboutText}
           tagline={c.tagline}
           videoUrl={c.videoUrl}
+          values={c.values}
         />
       </Reveal>
 
@@ -71,10 +73,10 @@ export default async function Home() {
       <section id="tienda" className="section catalog-section">
         <Reveal className="section-head">
           <div>
-            <span className="kicker-pill">Frascos Individuales</span>
-            <h2>Nuestra Colección de Frascos</h2>
+            <span className="kicker-pill">{c.catalogKicker || 'Frascos Individuales'}</span>
+            <h2>{c.catalogTitle || 'Nuestra Colección de Frascos'}</h2>
           </div>
-          <p className="catalog-subtitle">Tandas cortas en frascos de vidrio de 200 g. Sin químicos ni espesantes.</p>
+          <p className="catalog-subtitle">{c.catalogSubtitle || 'Tandas cortas en frascos de vidrio de 200 g. Sin químicos ni espesantes.'}</p>
         </Reveal>
         <div className="grid">
           {products.map((p, n) => (
@@ -90,28 +92,30 @@ export default async function Home() {
         <Reveal>
           <BoxBuilder
             products={products}
+            giftKicker={c.giftKicker || 'Edición Especial'}
             giftTitle={c.giftTitle || 'Caja de Madera Artesanal'}
             giftText={c.giftText || 'El regalo definitivo para amantes de la buena cocina. Escoge tus frascos favoritos.'}
+            capacity={(c as any).giftCapacity ?? 4}
+            discountPct={(c as any).giftDiscountPct ?? 0}
+            pricingMode={(c as any).giftPricingMode ?? 'sum'}
+            fixedPrice={(c as any).giftFixedPrice ?? 0}
+            productSlugs={(c as any).giftProductSlugs ?? []}
           />
         </Reveal>
       )}
 
       {/* 6. Guía de Maridajes Culinarios por ocasión */}
       <Reveal>
-        <PairingGuide products={products} />
+        <PairingGuide
+          products={products}
+          kicker={c.pairingKicker}
+          title={c.pairingTitle}
+          subtitle={c.pairingSubtitle}
+          items={(c as any).pairingItems}
+        />
       </Reveal>
 
-      {/* 7. Proceso Artesanal: "De la Huerta a tu Mesa" */}
-      <Reveal>
-        <ArtisanProcess />
-      </Reveal>
-
-      {/* 9. Asistente interactivo de recetas */}
-      <Reveal>
-        <Assistant products={products} />
-      </Reveal>
-
-      {/* 10. Ticker de valores en movimiento */}
+      {/* 8. Ticker de valores en movimiento */}
       <div className="ticker" aria-hidden="true">
         <div>
           {[...c.values, ...c.values].map((v, i) => (
@@ -120,28 +124,18 @@ export default async function Home() {
         </div>
       </div>
 
-      {/* 11. Testimonios de clientes reales */}
+      {/* 9. Testimonios de clientes reales */}
       <Reveal>
-        <Testimonials />
-      </Reveal>
-
-      {/* 12. Filosofía Slow Food heredada */}
-      <Reveal as="section" className="slow" aria-label="Nuestra forma de cocinar">
-        <img src="/img/fotos/diagonal.webp" alt="Frascos de conservas artesanales" loading="lazy" />
-        <div className="slow-copy">
-          <span className="kicker-pill">Cocina sin Afán</span>
-          <h2>{c.slowTitle}</h2>
-          <p>{c.slowText}</p>
-        </div>
+        <Testimonials reviews={c.testimonials} />
       </Reveal>
 
       {/* 13. Preguntas frecuentes con diseño enriquecido */}
       {c.faq.length > 0 && (
         <section className="section faq" aria-labelledby="faq-h">
           <div className="faq-side">
-            <span className="kicker-pill">Dudas Resueltas</span>
-            <h2 id="faq-h">Preguntas frecuentes</h2>
-            <p className="faq-side-desc">Todo sobre nuestros envíos, tiempos de entrega y conservación en casa.</p>
+            <span className="kicker-pill">{c.faqKicker || 'Dudas Resueltas'}</span>
+            <h2 id="faq-h">{c.faqTitle || 'Preguntas frecuentes'}</h2>
+            <p className="faq-side-desc">{c.faqSubtitle || 'Todo sobre nuestros envíos, tiempos de entrega y conservación en casa.'}</p>
           </div>
           <div className="faq-list">
             {c.faq.map((f) => (
@@ -158,7 +152,13 @@ export default async function Home() {
       )}
 
       {/* 14. Boletín para recetas exclusivas */}
-      <Newsletter />
+      <Newsletter
+        kicker={c.newsletterKicker}
+        title={c.newsletterTitle}
+        subtitle={c.newsletterSubtitle}
+        note={c.newsletterNote}
+        consentText={(c as any).newsletterConsentText}
+      />
     </>
   );
 }

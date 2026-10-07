@@ -1,2 +1,4 @@
+import { Suspense } from 'react';
 import { Users } from '@/components/admin/Users';
-export default function Page() { return <Users />; }
+import { PageSkeleton } from '@/components/admin/kit';
+export default function Page() { return <Suspense fallback={<PageSkeleton />}><Users /></Suspense>; }

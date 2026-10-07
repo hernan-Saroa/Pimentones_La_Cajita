@@ -55,11 +55,12 @@ export class AdminService {
     return { ...o, items: await this.ordersSvc.itemsOf(o.id) };
   }
 
-  async updateOrder(id: number, patch: { status?: string; tracking?: string; adminNotes?: string }) {
+  async updateOrder(id: number, patch: { status?: string; tracking?: string; carrier?: string; adminNotes?: string }) {
     const [o] = await this.db.select().from(orders).where(eq(orders.id, id));
     if (!o) throw new NotFoundException('Pedido no encontrado.');
     const set: Record<string, unknown> = { updatedAt: new Date() };
     if (patch.tracking !== undefined) set.tracking = patch.tracking;
+    if (patch.carrier !== undefined) set.carrier = patch.carrier || null;
     if (patch.adminNotes !== undefined) set.adminNotes = patch.adminNotes;
     if (patch.status === 'cancelled' && o.status === 'pending') await this.ordersSvc.release(o.reference, 'cancelled');  // devuelve inventario
     else if (patch.status) set.status = patch.status;
@@ -76,6 +77,21 @@ export class AdminService {
     const [m] = await this.db.update(messages).set({ status }).where(eq(messages.id, id)).returning();
     if (!m) throw new NotFoundException('Mensaje no encontrado.');
     return m;
+  }
+  async createMessage(data: { name: string; email: string; phone?: string | null; message: string; status?: string }) {
+    const [m] = await this.db.insert(messages).values({
+      name: data.name,
+      email: data.email.toLowerCase().trim(),
+      phone: data.phone?.trim() || null,
+      message: data.message.trim(),
+      status: data.status || 'new',
+    }).returning();
+    return m;
+  }
+  async deleteMessage(id: number) {
+    const [m] = await this.db.delete(messages).where(eq(messages.id, id)).returning();
+    if (!m) throw new NotFoundException('Mensaje no encontrado.');
+    return { ok: true };
   }
   async unreadMessages() { const [r] = await this.db.select({ n: sql<number>`count(*)::int` }).from(messages).where(eq(messages.status, 'new')); return r.n; }
 

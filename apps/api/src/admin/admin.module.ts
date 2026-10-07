@@ -9,11 +9,13 @@ import { AdminAuthService, AdminGuard } from './auth';
 import { OrdersModule } from '../orders/orders.module';
 import { CatalogModule } from '../catalog/catalog.module';
 import { loadConfig } from '../config/config';
+import { NotificationsModule } from '../notifications/notifications.module';
+import { InboxService } from './inbox.service';
 
 @Module({
-  imports: [JwtModule.register({ secret: loadConfig().jwtSecret, signOptions: { expiresIn: '12h' } }), OrdersModule, CatalogModule],
+  imports: [JwtModule.register({ secret: loadConfig().jwtSecret, signOptions: { expiresIn: '12h' } }), OrdersModule, CatalogModule, NotificationsModule],
   controllers: [AdminController, AdminProtectedController],
-  providers: [AdminService, AdminAuthService, AdminGuard, AnalyticsService, BackofficeService, AuditService],
+  providers: [AdminService, AdminAuthService, AdminGuard, AnalyticsService, BackofficeService, AuditService, InboxService],
   exports: [BackofficeService],
 })
 export class AdminModule {}

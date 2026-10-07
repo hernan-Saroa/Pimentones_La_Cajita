@@ -21,6 +21,16 @@ export class MailService {
     catch (e) { this.log.error(`No se pudo enviar correo a ${to}: ${(e as Error).message}`); }
   }
 
+  /** ¿Hay SMTP configurado? La bandeja lo usa para enviar respuestas desde la plataforma o abrir el correo del equipo. */
+  get enabled() { return Boolean(this.transport); }
+
+  /** Respuesta del equipo a un cliente desde la bandeja. Si falla, lanza el error para que el panel lo muestre. */
+  async reply(to: string, subject: string, text: string) {
+    if (!this.transport) return false;
+    await this.transport.sendMail({ from: this.cfg.smtp.from, to, replyTo: this.cfg.smtp.notify || undefined, subject, text });
+    return true;
+  }
+
   private summary(o: OrderRow, items: Pick<OrderItemRow, 'name' | 'unitPrice' | 'quantity'>[]) {
     return [`Pedido ${o.reference}`, ...items.map((i) => `  ${i.quantity} x ${i.name}  ${cop(i.unitPrice * i.quantity)}`),
       `  Envío: ${cop(o.shipping)}`, `  Total: ${cop(o.total)}`, '', `Entrega: ${o.address}, ${o.city} (${o.department})`].join('\n');

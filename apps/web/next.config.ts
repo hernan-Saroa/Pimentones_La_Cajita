@@ -4,7 +4,11 @@ const API = process.env.API_URL || 'http://localhost:4000';
 
 const config: NextConfig = {
   reactStrictMode: true,
+  devIndicators: false,
   output: 'standalone',
+  experimental: {
+    optimizeRouterScrolling: true,
+  },
   transpilePackages: ['@lacajita/shared'],
   images: { formats: ['image/avif', 'image/webp'], remotePatterns: [{ protocol: 'https', hostname: '**' }] },
   // La web habla con la API por el mismo origen: sin CORS en el navegador y una sola URL pública.

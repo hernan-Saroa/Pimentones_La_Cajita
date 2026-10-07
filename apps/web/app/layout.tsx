@@ -22,7 +22,7 @@ export const viewport: Viewport = { width: 'device-width', initialScale: 1, view
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es-CO">
+    <html lang="es-CO" data-scroll-behavior="smooth">
       <body>
         <Tracker />
         <SiteChrome><Header /></SiteChrome>

@@ -7,7 +7,7 @@ import { loadConfig } from '../config/config';
 
 export const toPublic = (p: ProductRow): Product => ({
   id: p.id, slug: p.slug, name: p.name, kicker: p.kicker, tagline: p.tagline, description: p.description,
-  pairing: p.pairing, price: p.price, sizeG: p.sizeG, stock: p.stock, image: p.image,
+  pairing: p.pairing, conservation: p.conservation, price: p.price, sizeG: p.sizeG, stock: p.stock, image: p.image,
 });
 
 @Injectable()

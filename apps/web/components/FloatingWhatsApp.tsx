@@ -46,13 +46,21 @@ export function FloatingWhatsApp() {
   const [showPrompt, setShowPrompt] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState<Topic>(TOPICS[0]);
   const [customMsg, setCustomMsg] = useState(TOPICS[0].message);
+  const [bubbleTitle, setBubbleTitle] = useState('¿Dudas con tus sabores o envíos?');
+  const [bubbleText, setBubbleText] = useState('Chatea directo con nuestro taller en Bogotá.');
+  const [enabled, setEnabled] = useState(true);
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    api.store()
-      .then((s) => {
+    Promise.all([api.store(), api.content()])
+      .then(([s, c]) => {
         if (s.whatsapp) setWaNumber(s.whatsapp.replace(/\D/g, ''));
         if (s.contact?.phone) setPhoneDisplay(s.contact.phone);
+        if (c) {
+          if (c.floatingChatEnabled === false) setEnabled(false);
+          if (c.floatingChatTitle) setBubbleTitle(c.floatingChatTitle);
+          if (c.floatingChatText) setBubbleText(c.floatingChatText);
+        }
       })
       .catch(() => {});
   }, []);
@@ -86,8 +94,8 @@ export function FloatingWhatsApp() {
     setIsOpen(false);
   };
 
-  // En páginas de administración o en el checkout para evitar distracciones no se muestra
-  if (pathname.startsWith('/admin')) return null;
+  // En páginas de administración o en el checkout para evitar distracciones no se muestra, o si fue deshabilitado desde admin
+  if (pathname.startsWith('/admin') || !enabled) return null;
 
   return (
     <aside className="wa-float-root" aria-label="Atención al cliente por WhatsApp">
@@ -114,8 +122,8 @@ export function FloatingWhatsApp() {
           >
             <span className="wa-prompt-avatar">🌶️</span>
             <div className="wa-prompt-text">
-              <strong>¿Dudas con tus sabores o envíos?</strong>
-              <span>Chatea directo con nuestro taller en Bogotá.</span>
+              <strong>{bubbleTitle}</strong>
+              <span>{bubbleText}</span>
             </div>
           </div>
         </div>

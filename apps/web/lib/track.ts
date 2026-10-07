@@ -28,10 +28,34 @@ function flush(beacon = false) {
   fetch('/api/events', { method: 'POST', headers: { 'content-type': 'application/json' }, body, keepalive: true }).catch(() => {});
 }
 
+function getClientContext(): Record<string, string> {
+  if (typeof window === 'undefined') return {};
+  const w = window.innerWidth;
+  const device = w < 768 ? 'mobile' : w < 1024 ? 'tablet' : 'desktop';
+  let source = 'direct';
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const utm = params.get('utm_source');
+    if (utm) source = utm.toLowerCase();
+    else if (document.referrer) {
+      const ref = document.referrer.toLowerCase();
+      if (ref.includes('instagram')) source = 'instagram';
+      else if (ref.includes('whatsapp') || ref.includes('wa.me')) source = 'whatsapp';
+      else if (ref.includes('google')) source = 'google';
+      else if (ref.includes('facebook')) source = 'facebook';
+      else if (ref.includes('tiktok')) source = 'tiktok';
+      else source = 'other';
+    }
+  } catch { /* no-op */ }
+  return { device, source, screen: `${w}x${window.innerHeight}` };
+}
+
 export function track(type: Type, data: Omit<Ev, 'type' | 'at'> = {}) {
   if (typeof window === 'undefined') return;
   if (navigator.doNotTrack === '1') return;   // se respeta la preferencia del navegador
-  queue.push({ type, at: Date.now(), path: data.path ?? location.pathname, ...data });
+  const ctx = getClientContext();
+  const meta = { ...ctx, ...(data.meta || {}) };
+  queue.push({ type, at: Date.now(), path: data.path ?? location.pathname, ...data, meta });
   if (!timer) timer = setTimeout(() => { timer = null; flush(); }, 2500);
 }
 
