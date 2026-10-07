@@ -8,6 +8,7 @@ import { BoxBuilder } from '@/components/BoxBuilder';
 import { PairingGuide } from '@/components/PairingGuide';
 import { Testimonials } from '@/components/Testimonials';
 import { Newsletter } from '@/components/HomeClient';
+import { FAQSection } from '@/components/FAQSection';
 import { Reveal } from '@/lib/motion';
 import { Leaf, Truck, Lock, Chevron } from '@/components/icons';
 
@@ -129,26 +130,16 @@ export default async function Home() {
         <Testimonials reviews={c.testimonials} />
       </Reveal>
 
-      {/* 13. Preguntas frecuentes con diseño enriquecido */}
-      {c.faq.length > 0 && (
-        <section className="section faq" aria-labelledby="faq-h">
-          <div className="faq-side">
-            <span className="kicker-pill">{c.faqKicker || 'Dudas Resueltas'}</span>
-            <h2 id="faq-h">{c.faqTitle || 'Preguntas frecuentes'}</h2>
-            <p className="faq-side-desc">{c.faqSubtitle || 'Todo sobre nuestros envíos, tiempos de entrega y conservación en casa.'}</p>
-          </div>
-          <div className="faq-list">
-            {c.faq.map((f) => (
-              <details key={f.q} className="faq-item">
-                <summary>
-                  <span>{f.q}</span>
-                  <Chevron />
-                </summary>
-                <p>{f.a}</p>
-              </details>
-            ))}
-          </div>
-        </section>
+      {/* 13. Preguntas frecuentes con diseño World-Class */}
+      {c.faq && c.faq.length > 0 && (
+        <FAQSection
+          kicker={c.faqKicker}
+          title={c.faqTitle}
+          subtitle={c.faqSubtitle}
+          items={c.faq}
+          whatsappUrl={store?.whatsapp ? `https://wa.me/${store.whatsapp.replace(/\D/g, '')}?text=Hola%20taller%20La%20Cajita,%20tengo%20una%20pregunta%20sobre%20sus%20productos.` : undefined}
+          whatsappPhone={store?.contact?.phone}
+        />
       )}
 
       {/* 14. Boletín para recetas exclusivas */}

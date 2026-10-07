@@ -48,6 +48,7 @@ export function FloatingWhatsApp() {
   const [customMsg, setCustomMsg] = useState(TOPICS[0].message);
   const [bubbleTitle, setBubbleTitle] = useState('¿Dudas con tus sabores o envíos?');
   const [bubbleText, setBubbleText] = useState('Chatea directo con nuestro taller en Bogotá.');
+  const [avatar, setAvatar] = useState('/img/isotipo.svg');
   const [enabled, setEnabled] = useState(true);
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -60,6 +61,7 @@ export function FloatingWhatsApp() {
           if (c.floatingChatEnabled === false) setEnabled(false);
           if (c.floatingChatTitle) setBubbleTitle(c.floatingChatTitle);
           if (c.floatingChatText) setBubbleText(c.floatingChatText);
+          if ((c as any).floatingChatAvatar) setAvatar((c as any).floatingChatAvatar);
         }
       })
       .catch(() => {});
@@ -120,7 +122,13 @@ export function FloatingWhatsApp() {
               setIsOpen(true);
             }}
           >
-            <span className="wa-prompt-avatar">🌶️</span>
+            <span className="wa-prompt-avatar">
+              {avatar.startsWith('/') || avatar.startsWith('http') ? (
+                <img src={avatar} alt="Pimentones La Cajita" className="wa-avatar-img" />
+              ) : (
+                <span>{avatar}</span>
+              )}
+            </span>
             <div className="wa-prompt-text">
               <strong>{bubbleTitle}</strong>
               <span>{bubbleText}</span>
@@ -136,7 +144,13 @@ export function FloatingWhatsApp() {
           <div className="wa-card-head">
             <div className="wa-card-brand">
               <div className="wa-avatar-wrap">
-                <span className="wa-avatar-icon">🌶️</span>
+                <span className="wa-avatar-icon">
+                  {avatar.startsWith('/') || avatar.startsWith('http') ? (
+                    <img src={avatar} alt="Pimentones La Cajita" className="wa-avatar-img" />
+                  ) : (
+                    <span>{avatar}</span>
+                  )}
+                </span>
                 <span className="wa-status-dot" title="En línea" />
               </div>
               <div className="wa-brand-info">

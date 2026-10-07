@@ -1,11 +1,13 @@
 import type { Metadata, Viewport } from 'next';
 import '@fontsource-variable/bricolage-grotesque';
 import './globals.css';
+import { Suspense } from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Tracker } from '@/components/Tracker';
 import { SiteChrome } from '@/components/SiteChrome';
 import { FloatingWhatsApp } from '@/components/FloatingWhatsApp';
+import { TopProgressBar } from '@/components/TopProgressBar';
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
@@ -24,6 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es-CO" data-scroll-behavior="smooth">
       <body>
+        <Suspense fallback={null}><TopProgressBar /></Suspense>
         <Tracker />
         <SiteChrome><Header /></SiteChrome>
         <main id="contenido">{children}</main>

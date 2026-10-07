@@ -428,11 +428,12 @@ export const SiteContentSchema = z.object({
   floatingChatEnabled: z.boolean().default(true),
   floatingChatTitle: z.string().max(100).default('¿Dudas con tus sabores o envíos?'),
   floatingChatText: z.string().max(200).default('Chatea directo con nuestro taller en Bogotá.'),
+  floatingChatAvatar: z.string().max(300).default('/img/isotipo.svg'),
 
   // 15. Garantías del Pie de Página (Ribbon)
   footerRibbonEnabled: z.boolean().default(true),
   footerPillars: z.array(FooterPillarSchema).default([
-    { id: 'fp-1', icon: '🌶️', title: 'Cosecha Seleccionada', desc: 'Pimentones maduros asados y confitados a fuego lento en Bogotá.', active: true },
+    { id: 'fp-1', icon: '🫑', title: 'Cosecha Seleccionada', desc: 'Pimentones maduros asados y confitados a fuego lento en Bogotá.', active: true },
     { id: 'fp-2', icon: '🌿', title: '100% Libre de Químicos', desc: 'Sin conservantes artificiales, espesantes ni colorantes añadidos.', active: true },
     { id: 'fp-3', icon: '📦', title: 'Envíos a Toda Colombia', desc: 'Embalaje antigolpes con sello térmico. Gratis desde $90.000.', active: true },
     { id: 'fp-4', icon: '🔒', title: 'Compra Segura & PSE', desc: 'Transacciones cifradas con Wompi, Bancolombia, Nequi y tarjetas.', active: true },

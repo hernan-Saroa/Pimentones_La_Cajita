@@ -125,6 +125,7 @@ type ContentData = {
   floatingChatEnabled?: boolean;
   floatingChatTitle?: string;
   floatingChatText?: string;
+  floatingChatAvatar?: string;
 };
 
 type SectionId =
@@ -330,7 +331,7 @@ export function Content() {
         'cartShippingNote', 'cartCheckoutBtnText', 'cartWhatsAppEnabled',
         'cartWhatsAppBtnText', 'cartGuaranteeText',
       ],
-      whatsapp: ['floatingChatEnabled', 'floatingChatTitle', 'floatingChatText'],
+      whatsapp: ['floatingChatEnabled', 'floatingChatTitle', 'floatingChatText', 'floatingChatAvatar'],
     };
     return new Set(
       (Object.entries(map) as [SectionId, (keyof ContentData)[]][])
@@ -3817,8 +3818,14 @@ export function Content() {
                     </Badge>
                   </div>
                   <div style={{ padding: 24, background: '#f8fafc', display: 'flex', justifyContent: 'flex-end' }}>
-                    <div style={{ maxWidth: 300, background: '#ffffff', padding: 14, borderRadius: 16, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', border: '1px solid var(--line)', display: 'flex', gap: 12, alignItems: 'center' }}>
-                      <span style={{ fontSize: 26 }}>🌶️</span>
+                    <div style={{ maxWidth: 320, background: '#ffffff', padding: 14, borderRadius: 16, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', border: '1px solid var(--line)', display: 'flex', gap: 12, alignItems: 'center' }}>
+                      <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#fff5f5', border: '1px solid rgba(186, 30, 35, 0.2)', display: 'grid', placeItems: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                        {((c.floatingChatAvatar || '/img/isotipo.svg').startsWith('/') || (c.floatingChatAvatar || '').startsWith('http')) ? (
+                          <img src={c.floatingChatAvatar || '/img/isotipo.svg'} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 4 }} />
+                        ) : (
+                          <span style={{ fontSize: 24 }}>{c.floatingChatAvatar || '🫑'}</span>
+                        )}
+                      </div>
                       <div>
                         <b style={{ display: 'block', fontSize: 13, color: '#18181b', marginBottom: 2 }}>
                           {c.floatingChatTitle || '¿Dudas con tus sabores o envíos?'}
@@ -3841,6 +3848,39 @@ export function Content() {
                     />
                     Habilitar globo flotante de WhatsApp en la tienda
                   </label>
+
+                  <Field label="Ícono / Avatar del Asistente" hint="Selecciona un preset oficial o ingresa la URL de una imagen">
+                    <div className="bo-stack" style={{ gap: 10 }}>
+                      <div className="bo-row" style={{ gap: 8, flexWrap: 'wrap' }}>
+                        {[
+                          { label: '🫑 Pimentón Oficial (Isotipo)', val: '/img/isotipo.svg' },
+                          { label: '🫙 Frasco Confitados', val: '/pimentones_confitados.png' },
+                          { label: '🏷️ Logo La Cajita', val: '/img/logo.svg' },
+                        ].map((preset) => {
+                          const isSel = (c.floatingChatAvatar || '/img/isotipo.svg') === preset.val;
+                          return (
+                            <button
+                              key={preset.val}
+                              type="button"
+                              disabled={!editable}
+                              onClick={() => set('floatingChatAvatar', preset.val)}
+                              className={`bo-btn ${isSel ? 'bo-btn-primary' : 'bo-btn-secondary'}`}
+                              style={{ fontSize: 12, padding: '6px 12px' }}
+                            >
+                              {preset.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <Input
+                        value={c.floatingChatAvatar ?? '/img/isotipo.svg'}
+                        maxLength={300}
+                        disabled={!editable}
+                        placeholder="/img/isotipo.svg o URL https://..."
+                        onChange={(e) => set('floatingChatAvatar', e.target.value)}
+                      />
+                    </div>
+                  </Field>
 
                   <Field label="Título de la invitación" counter={(c.floatingChatTitle || '').length} max={100}>
                     <Input

@@ -100,20 +100,21 @@ export function Header() {
           <Link href="/#caja">Caja de madera</Link>
           <Link href="/#maridajes">Maridajes</Link>
           <Link href="/#historia">El Fogón</Link>
-          <Link href="/mi-pedido">Mi pedido</Link>
           <Link href="/contacto">Contacto</Link>
         </nav>
         <div className="topbar-actions">
-          <a
-            href={storeInfo.whatsappUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="header-wa-btn"
-            aria-label={`Contactar al equipo por WhatsApp: ${storeInfo.phoneDisplay}`}
+          <Link
+            href="/mi-pedido"
+            className={`header-track-btn ${pathname.startsWith('/mi-pedido') || pathname.startsWith('/pedido') ? 'is-active' : ''}`}
+            aria-label="Rastrear mi pedido en tiempo real"
           >
-            <WhatsApp width={16} height={16} />
-            <span>{storeInfo.phoneDisplay}</span>
-          </a>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+              <path d="m3.3 7 8.7 5 8.7-5" />
+              <path d="M12 22V12" />
+            </svg>
+            <span>Mi pedido</span>
+          </Link>
           <button className="cart-btn" onClick={() => setOpen(true)} aria-label={`Abrir carrito, ${shown} productos`}>
             <Bag />
             {shown > 0 && <b className={`cart-count ${bump ? 'bump' : ''}`}>{shown}</b>}
