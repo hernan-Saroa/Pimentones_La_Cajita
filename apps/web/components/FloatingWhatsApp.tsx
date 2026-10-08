@@ -99,8 +99,10 @@ export function FloatingWhatsApp() {
   // En páginas de administración o en el checkout para evitar distracciones no se muestra, o si fue deshabilitado desde admin
   if (pathname.startsWith('/admin') || !enabled) return null;
 
+  const isProductPage = pathname?.startsWith('/producto/');
+
   return (
-    <aside className="wa-float-root" aria-label="Atención al cliente por WhatsApp">
+    <aside className={`wa-float-root ${isProductPage ? 'wa-with-sticky-bar' : ''}`} aria-label="Atención al cliente por WhatsApp">
       {/* Globo de invitación inicial (tooltip inteligente) */}
       {showPrompt && !isOpen && (
         <div className="wa-prompt-bubble" role="status">

@@ -17,6 +17,34 @@ interface BoxBuilderProps {
   productSlugs?: string[];
 }
 
+function CraftGuarantees() {
+  return (
+    <div className="box-craft-card">
+      <div className="craft-item">
+        <span className="craft-icon" aria-hidden="true">🌲</span>
+        <div className="craft-text">
+          <strong>Madera maciza de pino natural</strong>
+          <span>Armada a mano en nuestro taller artesanal con acabado rústico.</span>
+        </div>
+      </div>
+      <div className="craft-item">
+        <span className="craft-icon" aria-hidden="true">🎀</span>
+        <div className="craft-text">
+          <strong>Lazo artesanal y dedicatoria</strong>
+          <span>Tarjeta rústica kraft personalizada con tus palabras sin costo.</span>
+        </div>
+      </div>
+      <div className="craft-item">
+        <span className="craft-icon" aria-hidden="true">🛡️</span>
+        <div className="craft-text">
+          <strong>Protección para despachos</strong>
+          <span>Cuna de viruta vegetal para que cada frasco viaje seguro a tu mesa.</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function BoxBuilder({
   products,
   giftKicker = 'Edición Para Regalar',
@@ -89,7 +117,6 @@ export function BoxBuilder({
     if (selectedItems.length === 0) return;
     setIsAdding(true);
 
-    // Resumen detallado del combo: ej. "2× Mayonesa de Pimentón, 2× Pimentones Confitados"
     const breakdown = available
       .map((p) => {
         const count = selectedItems.filter((it) => it.id === p.id).length;
@@ -119,7 +146,7 @@ export function BoxBuilder({
   return (
     <section id="caja" className="section box-experience" aria-labelledby="box-title">
       <div className="box-experience-inner">
-        {/* Encabezado superior unificado: elimina el desnivel y vacíos entre columnas */}
+        {/* Encabezado superior unificado */}
         <div className="box-header-top">
           <span className="kicker-pill">{giftKicker}</span>
           <h2 id="box-title">{giftTitle}</h2>
@@ -128,7 +155,7 @@ export function BoxBuilder({
 
         {/* Cuadrícula balanceada de 2 columnas con inicio alineado */}
         <div className="box-experience-grid">
-          {/* Lado izquierdo: Visualizador de la Caja y Garantías Artesanales */}
+          {/* Lado izquierdo: Visualizador de la Caja */}
           <div className="box-visual">
             <div className="box-badge-floating">
               <span className="spark"><Sparkle width={14} height={14} /></span>
@@ -150,7 +177,7 @@ export function BoxBuilder({
             {/* Ranuras interactivas de los frascos en la caja */}
             <div
               className="box-slots"
-              style={{ gridTemplateColumns: `repeat(${targetCapacity}, 1fr)` }}
+              style={{ gridTemplateColumns: `repeat(${targetCapacity}, minmax(0, 1fr))` }}
               aria-label="Frascos seleccionados en la caja de madera"
             >
               {[...Array(targetCapacity).keys()].map((slotIdx) => {
@@ -176,7 +203,7 @@ export function BoxBuilder({
                         >
                           ✕
                         </button>
-                        <img src={p.image ?? ''} alt={p.name} />
+                        <img src={p.image ?? ''} alt={p.name} loading="lazy" />
                         <span className="slot-name">{p.name.split(' ')[0]}</span>
                       </div>
                     ) : (
@@ -189,29 +216,9 @@ export function BoxBuilder({
               })}
             </div>
 
-            {/* Tarjeta de garantías de oficio: equilibra y elimina el espacio blanco inferior */}
-            <div className="box-craft-card">
-              <div className="craft-item">
-                <span className="craft-icon">🌲</span>
-                <div className="craft-text">
-                  <strong>Madera maciza de pino natural</strong>
-                  <span>Armada a mano en nuestro taller artesanal con acabado rústico.</span>
-                </div>
-              </div>
-              <div className="craft-item">
-                <span className="craft-icon">🎀</span>
-                <div className="craft-text">
-                  <strong>Lazo artesanal y dedicatoria</strong>
-                  <span>Tarjeta rústica kraft personalizada con tus palabras sin costo.</span>
-                </div>
-              </div>
-              <div className="craft-item">
-                <span className="craft-icon">🛡️</span>
-                <div className="craft-text">
-                  <strong>Protección para despachos</strong>
-                  <span>Cuna de viruta vegetal para que cada frasco viaje seguro a tu mesa.</span>
-                </div>
-              </div>
+            {/* Tarjeta de garantías de oficio (Solo visible en Desktop en columna izquierda) */}
+            <div className="craft-card-desktop">
+              <CraftGuarantees />
             </div>
           </div>
 
@@ -222,7 +229,7 @@ export function BoxBuilder({
               <div className="picker-title-row">
                 <div className="picker-counter-wrap">
                   <span className="picker-title">
-                    Elige los frascos de tu caja ({selectedItems.length}/{targetCapacity}):
+                    Elige los frascos ({selectedItems.length}/{targetCapacity}):
                   </span>
                   {selectedItems.length === targetCapacity ? (
                     <span className="picker-ready-badge">✓ ¡Caja completa!</span>
@@ -242,7 +249,8 @@ export function BoxBuilder({
                 </div>
               </div>
 
-              <div className="flavor-options">
+              {/* Lista ergonómica y táctil de frascos disponibles */}
+              <div className="box-flavor-list">
                 {available.map((prod) => {
                   const count = selectedItems.filter((it) => it.id === prod.id).length;
                   const isSelected = count > 0;
@@ -250,57 +258,78 @@ export function BoxBuilder({
                   return (
                     <div
                       key={prod.id}
-                      className={`flavor-chip ${isSelected ? 'active' : ''}`}
+                      className={`box-flavor-row ${isSelected ? 'selected' : ''}`}
                       role="group"
                       aria-label={`${prod.name}: ${count} en la caja`}
                     >
-                      {isSelected ? (
-                        <div className="chip-stepper">
-                          <button
-                            type="button"
-                            className="chip-step-btn"
-                            onClick={() => removeItem(prod)}
-                            aria-label={`Restar un ${prod.name}`}
-                            title="Restar uno"
-                          >
-                            −
-                          </button>
-                          <span className="chip-count-pill">{count}</span>
-                          <button
-                            type="button"
-                            className="chip-step-btn"
-                            onClick={() => addItem(prod)}
-                            disabled={isFull}
-                            aria-label={`Sumar otro ${prod.name}`}
-                            title={isFull ? `La caja ya tiene ${targetCapacity} frascos` : 'Sumar otro frasco'}
-                          >
-                            +
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          className="chip-add-btn"
-                          onClick={() => addItem(prod)}
-                          disabled={isFull}
-                          aria-label={`Agregar ${prod.name} a la caja`}
-                          title={isFull ? `La caja ya tiene ${targetCapacity} frascos` : 'Agregar a la caja'}
-                        >
-                          <span className="chip-check">+</span>
-                        </button>
-                      )}
-
-                      <span
-                        className="chip-name"
+                      <div
+                        className="flavor-row-main"
                         onClick={() => {
-                          if (count === 0 && !isFull) addItem(prod);
-                          else if (count > 0 && !isFull) addItem(prod);
+                          if (!isFull) addItem(prod);
                         }}
-                        style={{ cursor: !isFull ? 'pointer' : 'default' }}
                       >
-                        {prod.name}
-                      </span>
-                      <span className="chip-price">{cop(prod.price)}</span>
+                        <div
+                          className="flavor-row-thumb"
+                          style={{ '--flavor-tint': tint(prod.slug) } as React.CSSProperties}
+                        >
+                          {prod.image ? (
+                            <img src={prod.image} alt={prod.name} loading="lazy" />
+                          ) : (
+                            <span className="flavor-thumb-fallback">🫙</span>
+                          )}
+                        </div>
+                        <div className="flavor-row-text">
+                          <span className="flavor-row-name">{prod.name}</span>
+                          <span className="flavor-row-price">{cop(prod.price)}</span>
+                        </div>
+                      </div>
+
+                      <div className="flavor-row-action">
+                        {isSelected ? (
+                          <div className="flavor-stepper">
+                            <button
+                              type="button"
+                              className="flavor-stepper-btn minus"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeItem(prod);
+                              }}
+                              aria-label={`Restar un ${prod.name}`}
+                              title="Restar uno"
+                            >
+                              −
+                            </button>
+                            <span className="flavor-stepper-count">{count}</span>
+                            <button
+                              type="button"
+                              className="flavor-stepper-btn plus"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                addItem(prod);
+                              }}
+                              disabled={isFull}
+                              aria-label={`Sumar otro ${prod.name}`}
+                              title={isFull ? `La caja ya tiene ${targetCapacity} frascos` : 'Sumar otro'}
+                            >
+                              +
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            className="flavor-add-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              addItem(prod);
+                            }}
+                            disabled={isFull}
+                            aria-label={`Agregar ${prod.name} a la caja`}
+                          >
+                            <span className="add-btn-icon">+</span>
+                            <span className="add-btn-text">Agregar</span>
+                          </button>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -334,8 +363,8 @@ export function BoxBuilder({
                 aria-expanded={showDedication}
               >
                 <span className="dedication-title">
-                  <span>✉️</span>
-                  <strong>¿Deseas tarjeta dedicatoria en papel rústico?</strong>
+                  <span className="dedication-icon">✉️</span>
+                  <strong>¿Deseas dedicatoria en papel rústico?</strong>
                 </span>
                 <span className="dedication-free-tag">Incluida gratis</span>
               </button>
@@ -344,7 +373,7 @@ export function BoxBuilder({
                 <div className="box-dedication-fields">
                   <div className="dedication-grid">
                     <label className="field-compact">
-                      <span>Para quien es:</span>
+                      <span>Para quién es:</span>
                       <input
                         placeholder="Ej.: Carlos Restrepo"
                         value={recipient}
@@ -377,15 +406,13 @@ export function BoxBuilder({
             {/* Resumen de compra de la caja */}
             <div className="box-purchase-card">
               <div className="purchase-details">
-                <div>
+                <div className="purchase-details-col">
                   <span className="purchase-label">
                     Total ({selectedItems.length} de {targetCapacity} frascos + caja de pino)
                   </span>
                   <div className="purchase-price-row">
                     {totalNormal > finalPrice && (
-                      <s style={{ color: 'var(--muted)', fontSize: '1.1rem', marginRight: 4 }}>
-                        {cop(totalNormal)}
-                      </s>
+                      <s className="purchase-price-old">{cop(totalNormal)}</s>
                     )}
                     <span className="purchase-price">{cop(finalPrice)}</span>
                     <span className="purchase-free-tag">
@@ -414,6 +441,11 @@ export function BoxBuilder({
                 ¿Requieres cajas corporativas o personalizadas para tu empresa?{' '}
                 <a href="/contacto" className="link-btn">Contáctanos aquí</a>.
               </p>
+            </div>
+
+            {/* Tarjeta de garantías de oficio (Visible en Mobile al final para no bloquear la compra) */}
+            <div className="craft-card-mobile">
+              <CraftGuarantees />
             </div>
           </div>
         </div>
