@@ -8,6 +8,7 @@ import { Tracker } from '@/components/Tracker';
 import { SiteChrome } from '@/components/SiteChrome';
 import { FloatingWhatsApp } from '@/components/FloatingWhatsApp';
 import { TopProgressBar } from '@/components/TopProgressBar';
+import { InstallBanner } from '@/components/InstallBanner';
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SiteChrome>
           <Footer />
           <FloatingWhatsApp />
+          <InstallBanner />
         </SiteChrome>
       </body>
     </html>

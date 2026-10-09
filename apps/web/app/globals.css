@@ -5387,5 +5387,144 @@ input[aria-invalid='true'], select[aria-invalid='true'] { border-color: var(--re
   color: #0f172a;
 }
 
+/* ===== PWA Install Banner (Android / Desktop) ===== */
+.install-banner-wrap {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 999;
+  max-width: 440px;
+  width: calc(100% - 48px);
+  animation: pwaSlideUpFade 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes pwaSlideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.install-banner-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #ffffff;
+  padding: 12px 16px;
+  border-radius: 16px;
+  border: 1px solid #ede5da;
+  box-shadow: 0 16px 36px -8px rgba(35, 23, 18, 0.18), 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.install-banner-icon-box {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: #fdfaf6;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.install-banner-img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+
+.install-banner-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.install-banner-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 750;
+  color: #1a1714;
+  line-height: 1.25;
+}
+
+.install-banner-subtitle {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  color: #6a625b;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.install-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.install-btn-confirm {
+  background: #c0291f;
+  color: #ffffff;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.install-btn-confirm:hover {
+  background: #a51f16;
+  transform: translateY(-1px);
+}
+
+.install-btn-confirm:active {
+  transform: translateY(1px);
+}
+
+.install-btn-dismiss {
+  background: transparent;
+  border: none;
+  color: #8c827a;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.install-btn-dismiss:hover {
+  color: #1a1714;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+@media (max-width: 640px) {
+  .install-banner-wrap {
+    bottom: 84px;
+    left: 14px;
+    right: 14px;
+    width: auto;
+  }
+  .install-banner-subtitle {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+}
+
+
 
 
